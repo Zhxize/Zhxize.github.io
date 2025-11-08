@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .tile {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 30px;
+            min-width: 150px;
+            font-size: 24px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const tiles = [
+            { text: "诸神学校", link: "/downloads/%C2%A76%E4%BA%8C%E6%9C%88%E5%B0%8F%E8%AF%B4/%E8%AF%B8%E7%A5%9E%E5%AD%A6%E6%A0%A1.HTML" },
+			{ text: "猎魔人（世界观）", link: "/downloads/%C2%A76%E4%BA%8C%E6%9C%88%E5%B0%8F%E8%AF%B4/%E7%8C%8E%E9%AD%94%E4%BA%BA%E4%B8%96%E7%95%8C%E8%A7%82.HTML" }
+        ];
+        
+        tiles.forEach(tile => {
+            const element = document.createElement('div');
+            element.className = 'tile';
+            element.textContent = tile.text;
+            element.onclick = () => location.href = tile.link;
+            document.body.appendChild(element);
+        });
+    </script>
+</body>
+</html>
