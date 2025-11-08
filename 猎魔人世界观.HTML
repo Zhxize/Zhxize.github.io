@@ -1,0 +1,801 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>猎魔人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #F2E8C1;
+            color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: filter 0.3s ease;
+        }
+        
+        /* 菜单按钮 */
+        #menu-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* TTS控制按钮 */
+        #tts-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 侧边栏 */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background-color: #F2E8C1;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 60px 15px 20px;
+        }
+        
+        #sidebar.active {
+            left: 0;
+        }
+        
+        #sidebar h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        #toc-list {
+            list-style: none;
+        }
+        
+        #toc-list li {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        #toc-list li:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        #toc-list li.active {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        /* TTS控制面板 */
+        #tts-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #F2E8C1;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #tts-controls.active {
+            display: block;
+        }
+        
+        .tts-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tts-label {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .tts-control {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tts-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #F2E8C1;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        
+        .tts-button.active {
+            background-color: #4CAF50;
+        }
+        
+        .tts-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+        
+        .tts-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #F2E8C1;
+            cursor: pointer;
+        }
+        
+        /* 阅读器主体 */
+        #reader {
+            max-width: 100%;
+            margin: 0 auto;
+            transition: font-size 0.2s ease;
+            word-wrap: break-word;
+            text-align: justify;
+            -webkit-text-size-adjust: none;
+        }
+        
+        /* 章节标题样式 */
+        .chapter-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 高亮当前朗读的段落 */
+        .tts-highlight {
+            background-color: rgba(255, 215, 0, 0.3);
+            transition: background-color 0.3s ease;
+        }
+        
+        /* 链接样式 */
+        .content-link {
+            color: #0000FF;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        /* 响应式调整 */
+        @media (min-width: 768px) {
+            #reader {
+                max-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 菜单按钮 -->
+    <div id="menu-button">☰</div>
+    
+    <!-- TTS按钮 -->
+    <div id="tts-button">🔊</div>
+    
+    <!-- 目录侧边栏 -->
+    <div id="sidebar">
+        <h2>目录</h2>
+        <ul id="toc-list"></ul>
+    </div>
+    
+    <!-- TTS控制面板 -->
+    <div id="tts-controls">
+        <div class="tts-row">
+            <span class="tts-label">语音控制</span>
+            <div class="tts-control">
+                <button id="tts-play" class="tts-button">▶</button>
+                <button id="tts-pause" class="tts-button">⏸</button>
+                <button id="tts-stop" class="tts-button">⏹</button>
+            </div>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语速</span>
+            <input type="range" id="tts-rate" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-rate-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音调</span>
+            <input type="range" id="tts-pitch" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-pitch-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音量</span>
+            <input type="range" id="tts-volume" class="tts-slider" min="0" max="1" step="0.1" value="1">
+            <span id="tts-volume-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语音</span>
+            <select id="tts-voice" class="tts-control">
+                <option value="">默认语音</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- 阅读器内容 -->
+    <div id="reader"></div>
+
+    <script>
+        // 直接嵌入的小说内容
+        const novelContent = `
+1.概述:
+这片大陆名为艾斯特里昂，是一片多种族的魔法大陆。几百年前，天使族，恶魔族，人类和精灵的战争让大陆的某些地方受到了污染，一些大恶魔使用了深渊禁咒，让大陆受到了侵蚀，诞生出了恐怖的深渊魔物。与此同时大陆本身的各个国家也非常的不稳定，机会与危机并存
+
+2.地图:
+<t>http://mc37.rhymc.com:21453/downloads/%C2%A76%E4%BA%8C%E6%9C%88%E5%B0%8F%E8%AF%B4/%E7%8C%8E%E9%AD%94%E4%BA%BA%E4%B8%96%E7%95%8C%E8%A7%82%E9%99%84%E5%9B%BE/map.jpg<t>如图</t>
+最西边为伊甸西亚，有是天使的国度，以精美华丽的大理石建筑著称，地势平坦，经济发达，政治极为稳定，有着“造物主”和“七美德天使”两大魔神残骸
+伊甸西亚之南是黑暗伊甸，由堕天使组成，曾是伊甸西亚的一部分
+伊甸西亚之东为帝里西斯，西克尔德，暮色公国三大同盟，事实上由恶魔统治的西克尔德统治，帝里西斯是恶魔的国度，暮色公国是血族的国度，西克尔德是恶魔血族堕天使们组成的国度，风气开放，经济发达，军事极为强大
+越过冰封之地，西克尔德的东部是精灵的霜月森林，有着现存最古老的神明——世界树。
+霜月森林的北部是荒蛮之地，是半兽人游牧民族的冰封草原。东南部是海族曾经的领地，但是现在这里已经被深渊侵蚀殆尽。
+在暮色公国之西，跨过古德钦山脉，矮人的克德帝国，是世界工业的中心，大量矿物的原产地，符文之石的主要出口地区。
+南方和东南方是弗兰斯，布罗德，艾拉瑞斯，艾历西安四个人类的国度，弗兰斯有着大陆最好的魔法学院，艾历西安极少的沟通着人类与精灵，布罗德是重要的农业出口国，艾拉瑞斯是圣光明教的起源之地，也是圣堂的所在之地。
+西克尔德西边有着人类最强王国艾斯坦蒂斯，拥有和艾拉瑞斯的圣殿骑士同等实力的冰封之鹰和烈焰之狮两类强大的军队，前者是机动性极强的魔法师和弓箭手组织起来的游击队，后者是物法双修的铁血战士，军事政治实力强大，和其他人类王国矮人王国有着非常密切的贸易，但是因为被冰封雪山隔断面对强大的西克尔德有些孤立无援
+
+3.魔法体系:
+<t>http://mc37.rhymc.com:21453/downloads/%C2%A76%E4%BA%8C%E6%9C%88%E5%B0%8F%E8%AF%B4/%E7%8C%8E%E9%AD%94%E4%BA%BA%E4%B8%96%E7%95%8C%E8%A7%82%E9%99%84%E5%9B%BE/%E9%AD%94%E6%B3%95%E4%BD%93%E7%B3%BB.jpg<t>如图</t>
+魔法分为光明魔法，黑暗魔法，自然魔法三大本源
+光明魔法分支：
+共鸣魔法：需要大量魔法使同时施法，适用于军队与战争
+造物魔法：所谓的炼金术，炼制药物，武器附魔，甚至创造魔法人偶
+光魔法：使用光的能力，攻击防御净化，在白天会得到极大的增幅
+信仰魔法：通过借用神的力量来使用法术，需要极为虔诚
+黑暗魔法分支：
+暗魔法：和光魔法相对，利用暗影的力量进行攻击防御污染和监视，在黑夜得到增强
+死灵魔法：利用尸体召唤不死的怪物，是最危险最难以控制但是也十分强大的法术
+血魔法：以生命为燃料，消耗巨大发动的法术，威力巨大，血族似乎只需要消耗魔力即可
+深渊魔法：狭义黑魔法，侵蚀，毁灭，以恶为燃料，用多了会侵蚀肉体
+自然魔法分支：
+占卜秘术：窥测未来，大多为隐晦的提示，越是清晰越是命中注定
+大地魔法：借用大地的生命力，强化肉体，操纵岩石，能够与岩石对话
+元素魔法：从最简单到最复杂，利用水火风地四种元素发动，每个魔法师的必经之路，种类最多
+生命秘术：恢复生命，回复体力，治愈肉体，抚慰灵魂，或是帮助作物生长
+其他分支：
+（光明和黑暗）精神法术：振奋士气，鼓足精神，或者是精神污染，颠倒是非
+（自然和黑暗）变形巫术：变身动物，增强自身素质，或者变身末日恶魔或者巫妖
+（自然和光明）空间魔术：扭曲时空，或是自然虫洞，也可用于链接过去与未来
+
+4.种族:
+人类：没有任何突出特点的种族
+恶魔：对于黑暗魔法天然亲和，拥有魅惑的外表，通常是红色瞳孔而且具有犄角，有的有红色的龙翼
+天使：神明的使徒，自认为高人一等，光明魔法天然亲和，通常是金发或者白发，面容俊美，白色羽翼
+精灵：自然的使徒，同样自认为高人一等，自然魔法天然亲和，通常是白发尖耳，面容俊美
+矮人：发明家种族，岩石亲和，大陆工业的缔造者，身材矮小
+德鲁伊：自然的信徒，自然魔法亲和，每个德鲁伊到成年必须掌握一种变形，同样专长元素魔法，可以理解成另一种精灵
+暗夜精灵：和精灵相反，暗魔法亲和， 自然魔法亲和，放荡不羁，紫色皮肤，尖耳白发
+堕天使：和天使相反，黑暗魔法亲和，同样放荡不羁，是被神遗弃的使徒，通常是黑发，红色瞳孔，黑色羽翼，面容俊美
+血族：吸血鬼，以鲜血为食，具有感染性，血魔法亲和，不死，有尖牙和血色瞳孔，皮肤苍白
+半兽人，形态各异的种族，大多是游牧民族，智力平均偏低，魔法排斥，力量或者速度极为恐怖
+
+5.祝福:
+每个人一生都可以从日与月中获取一次祝福。一个人有两种力量，魔力和生命力，魔力消耗完了会用生命力来补足，所以超出实力使用魔法会反噬，两种力量不可计量，但是能够感知（水晶球），可以随着时间的流逝慢慢恢复
+日之祝福：
+光羽之赐：身体轻盈，从高处坠落时犹如羽毛，大幅减缓下落速度
+晨曦之心：在阳光下，体力与精力的恢复速度会显著加快
+烈阳之手：徒手接触物体时，可以将其缓慢加热至烫手的程度
+辉光视觉：双眼能适应强光，在雪原、沙漠等反光强烈的地方也能保持清晰视力
+余晖印记：被你鲜血沾染的人或物，在一天内会与你产生微弱的感应，你能大致感知其方位
+骄阳威仪：当你坚定地表达立场时，你的话语会附带一丝令人信服的力量
+流光速度：在阳光下，你的反应速度会快上那么一线
+日冕耐性：对高温和炎热环境的耐受度远超常人
+朝露亲和：你能凭直觉分辨出何种天然水源是安全可饮用的
+正午壁垒：当你站立不动全力防御时，对冲击力的抵抗会小幅提升
+金辉共鸣：当你与拥有同类“日之祝福”的伙伴并肩作战时，会感到心意相通，配合更为默契
+不灭余火：在身受致命伤后，生命力不会立刻消散，能强行维持一小段时间的意识
+月之祝福：
+猫步轻灵：在阴影中移动时，脚步声会变得极轻
+夜瞳之视：在微光环境下（如月光、星光），视力大幅增强
+寒霜抚慰：身体恒温，对低温环境的耐受度远超常人
+镜花水月：当你保持静止时，存在感会降低，容易被人忽略
+梦境蛛网：睡眠极深，只需常人一半的睡眠时间即可恢复全部精力，且不易被普通声响惊醒
+潮汐感应：能模糊地感知到附近水体的情绪（平静、汹涌、悲伤）
+银月指引：在有月亮的夜晚，你永远不会迷失方向
+暗影拥抱：在无光的彻底黑暗中，你的气息和体温会近乎完全收敛
+读痕之识：你的直觉能让你从足迹、残破物品上，读到更多被忽略的细节
+心弦感知：能模糊地感知到近距离内他人针对你的强烈恶意或杀意
+记忆回响：当你触摸一件拥有强烈历史情感的物品时，能听到往昔的回声碎片
+安魂曲：你身边小范围内的动植物，会自然地进入更安宁、恢复的状态`;
+
+        // 获取DOM元素
+        const reader = document.getElementById('reader');
+        const menuButton = document.getElementById('menu-button');
+        const ttsButton = document.getElementById('tts-button');
+        const sidebar = document.getElementById('sidebar');
+        const tocList = document.getElementById('toc-list');
+        const ttsControls = document.getElementById('tts-controls');
+        
+        // TTS相关元素
+        const ttsPlay = document.getElementById('tts-play');
+        const ttsPause = document.getElementById('tts-pause');
+        const ttsStop = document.getElementById('tts-stop');
+        const ttsRate = document.getElementById('tts-rate');
+        const ttsRateValue = document.getElementById('tts-rate-value');
+        const ttsPitch = document.getElementById('tts-pitch');
+        const ttsPitchValue = document.getElementById('tts-pitch-value');
+        const ttsVolume = document.getElementById('tts-volume');
+        const ttsVolumeValue = document.getElementById('tts-volume-value');
+        const ttsVoice = document.getElementById('tts-voice');
+        
+        // 存储阅读位置和字体大小
+        let fontSize = localStorage.getItem('readerFontSize') || 16;
+        let scrollPosition = localStorage.getItem('readerScrollPosition') || 0;
+        
+        // 存储章节信息
+        let chapters = [];
+        
+        // TTS相关变量
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let isPlaying = false;
+        let currentParagraphIndex = 0;
+        let paragraphs = [];
+        let voices = [];
+        
+        // 初始化字体大小
+        reader.style.fontSize = fontSize + 'px';
+        
+        // 双指缩放变量
+        let initialDistance = 0;
+        let initialFontSize = 0;
+        
+        // 加载小说内容
+        function loadNovel() {
+            // 处理文本内容，添加段落格式
+            const formattedText = formatText(novelContent);
+            reader.innerHTML = formattedText;
+            
+            // 获取所有段落
+            paragraphs = Array.from(reader.querySelectorAll('p, .chapter-title'));
+            
+            // 生成目录
+            generateTOC();
+            
+            // 恢复阅读位置
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+                updateActiveChapter();
+            }, 100);
+            
+            // 初始化TTS
+            initTTS();
+        }
+        
+        // 格式化文本并识别章节
+        function formatText(text) {
+            // 将文本按行分割
+            const lines = text.split('\n');
+            let formatted = '';
+            
+            // 章节识别正则表达式
+            const chapterPattern = /^[零一二三四五六七八九十百千0-9]+\.[\u4e00-\u9fa5]+[:：].*$/;
+            
+            // 过滤空行并添加段落标签
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.length > 0) {
+                    // 检查是否是章节标题
+                    if (chapterPattern.test(line)) {
+                        // 创建章节信息
+                        const chapterId = `chapter-${chapters.length}`;
+                        chapters.push({
+                            id: chapterId,
+                            title: line,
+                            position: i
+                        });
+                        
+                        // 添加章节标题
+                        formatted += `<h2 id="${chapterId}" class="chapter-title">${line}</h2>`;
+                    } else {
+                        // 处理链接格式
+                        const processedLine = processLinks(line);
+                        formatted += `<p>${processedLine}</p>`;
+                    }
+                }
+            }
+            
+            return formatted;
+        }
+        
+        // 处理链接格式
+        function processLinks(text) {
+            // 正则表达式匹配格式：<t>URL<t>显示文本</t>
+            const linkPattern = /<t>(.*?)<t>(.*?)<\/t>/g;
+            
+            // 替换匹配的格式为可点击链接
+            return text.replace(linkPattern, function(match, url, displayText) {
+                // 确保URL有协议前缀
+                let fullUrl = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    fullUrl = 'https://' + url;
+                }
+                
+                // 返回链接HTML
+                return `<a href="${fullUrl}" target="_blank" class="content-link">${displayText}</a>`;
+            });
+        }
+        
+        // 生成目录
+        function generateTOC() {
+            tocList.innerHTML = '';
+            
+            chapters.forEach((chapter, index) => {
+                const li = document.createElement('li');
+                li.textContent = chapter.title;
+                li.dataset.chapterId = chapter.id;
+                
+                li.addEventListener('click', () => {
+                    // 跳转到对应章节
+                    const chapterElement = document.getElementById(chapter.id);
+                    if (chapterElement) {
+                        chapterElement.scrollIntoView({ behavior: 'smooth' });
+                        // 关闭侧边栏
+                        toggleSidebar();
+                        // 更新活动章节
+                        updateActiveChapter();
+                    }
+                });
+                
+                tocList.appendChild(li);
+            });
+        }
+        
+        // 更新活动章节
+        function updateActiveChapter() {
+            const tocItems = tocList.querySelectorAll('li');
+            const scrollTop = window.scrollY;
+            let activeChapter = null;
+            
+            // 找到当前可见的章节
+            for (let i = chapters.length - 1; i >= 0; i--) {
+                const chapter = chapters[i];
+                const element = document.getElementById(chapter.id);
+                if (element && element.offsetTop <= scrollTop + 100) {
+                    activeChapter = chapter.id;
+                    break;
+                }
+            }
+            
+            // 更新目录中的活动项
+            tocItems.forEach(item => {
+                if (item.dataset.chapterId === activeChapter) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 切换侧边栏显示/隐藏
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('sidebar-open');
+        }
+        
+        // 切换TTS控制面板显示/隐藏
+        function toggleTTSControls() {
+            ttsControls.classList.toggle('active');
+        }
+        
+        // 初始化TTS功能
+        function initTTS() {
+            // 检查浏览器是否支持
+            if (!speechSynthesis) {
+                ttsButton.style.display = 'none';
+                return;
+            }
+            
+            // 加载可用语音
+            loadVoices();
+            
+            // 语音加载事件
+            speechSynthesis.onvoiceschanged = loadVoices;
+            
+            // TTS控制事件
+            ttsPlay.addEventListener('click', playTTS);
+            ttsPause.addEventListener('click', pauseTTS);
+            ttsStop.addEventListener('click', stopTTS);
+            
+            // TTS参数控制
+            ttsRate.addEventListener('input', updateTTSRate);
+            ttsPitch.addEventListener('input', updateTTSPitch);
+            ttsVolume.addEventListener('input', updateTTSVolume);
+            ttsVoice.addEventListener('change', updateTTSVoice);
+            
+            // 初始化显示值
+            updateTTSRate();
+            updateTTSPitch();
+            updateTTSVolume();
+        }
+        
+        // 加载可用语音
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            ttsVoice.innerHTML = '<option value="">默认语音</option>';
+            
+            // 优先显示中文语音
+            const chineseVoices = voices.filter(voice => voice.lang.includes('zh'));
+            const otherVoices = voices.filter(voice => !voice.lang.includes('zh'));
+            
+            chineseVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+            
+            otherVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+        }
+        
+        // 播放TTS
+        function playTTS() {
+            if (isPlaying) {
+                speechSynthesis.resume();
+                return;
+            }
+            
+            // 从当前可见的段落开始
+            const scrollTop = window.scrollY;
+            for (let i = 0; i < paragraphs.length; i++) {
+                if (paragraphs[i].offsetTop >= scrollTop - 50) {
+                    currentParagraphIndex = i;
+                    break;
+                }
+            }
+            
+            speakCurrentParagraph();
+        }
+        
+        // 朗读当前段落
+        function speakCurrentParagraph() {
+            if (currentParagraphIndex >= paragraphs.length) {
+                stopTTS();
+                return;
+            }
+            
+            // 移除之前的高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+            
+            // 高亮当前段落
+            const currentParagraph = paragraphs[currentParagraphIndex];
+            currentParagraph.classList.add('tts-highlight');
+            
+            // 滚动到当前段落
+            currentParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 创建语音合成实例
+            currentUtterance = new SpeechSynthesisUtterance(currentParagraph.textContent);
+            
+            // 设置语音参数
+            currentUtterance.rate = parseFloat(ttsRate.value);
+            currentUtterance.pitch = parseFloat(ttsPitch.value);
+            currentUtterance.volume = parseFloat(ttsVolume.value);
+            
+            // 设置语音
+            if (ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+            
+            // 语音结束事件
+            currentUtterance.onend = function() {
+                currentParagraphIndex++;
+                speakCurrentParagraph();
+            };
+            
+            // 开始朗读
+            speechSynthesis.speak(currentUtterance);
+            isPlaying = true;
+        }
+        
+        // 暂停TTS
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                isPlaying = false;
+            }
+        }
+        
+        // 停止TTS
+        function stopTTS() {
+            speechSynthesis.cancel();
+            isPlaying = false;
+            currentParagraphIndex = 0;
+            
+            // 移除高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+        }
+        
+        // 更新语速
+        function updateTTSRate() {
+            ttsRateValue.textContent = ttsRate.value;
+            if (currentUtterance) {
+                currentUtterance.rate = parseFloat(ttsRate.value);
+            }
+        }
+        
+        // 更新音调
+        function updateTTSPitch() {
+            ttsPitchValue.textContent = ttsPitch.value;
+            if (currentUtterance) {
+                currentUtterance.pitch = parseFloat(ttsPitch.value);
+            }
+        }
+        
+        // 更新音量
+        function updateTTSVolume() {
+            ttsVolumeValue.textContent = ttsVolume.value;
+            if (currentUtterance) {
+                currentUtterance.volume = parseFloat(ttsVolume.value);
+            }
+        }
+        
+        // 更新语音
+        function updateTTSVoice() {
+            if (currentUtterance && ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+        }
+        
+        // 双指缩放功能
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                initialDistance = getDistance(e.touches[0], e.touches[1]);
+                initialFontSize = fontSize;
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const scale = currentDistance / initialDistance;
+                
+                // 计算新的字体大小
+                let newFontSize = initialFontSize * scale;
+                
+                // 限制字体大小范围
+                newFontSize = Math.max(12, Math.min(40, newFontSize));
+                
+                // 应用新的字体大小
+                fontSize = newFontSize;
+                reader.style.fontSize = fontSize + 'px';
+                
+                // 保存字体大小设置
+                localStorage.setItem('readerFontSize', fontSize);
+            }
+        }
+        
+        function getDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // 保存阅读位置
+        function saveScrollPosition() {
+            scrollPosition = window.scrollY;
+            localStorage.setItem('readerScrollPosition', scrollPosition);
+            
+            // 更新活动章节
+            updateActiveChapter();
+        }
+        
+        // 初始化事件监听
+        document.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        
+        // 监听滚动事件保存位置
+        window.addEventListener('scroll', saveScrollPosition);
+        
+        // 菜单按钮点击事件
+        menuButton.addEventListener('click', toggleSidebar);
+        
+        // TTS按钮点击事件
+        ttsButton.addEventListener('click', toggleTTSControls);
+        
+        // 点击侧边栏外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                e.target !== menuButton) {
+                toggleSidebar();
+            }
+            
+            // 点击TTS控制面板外部关闭面板
+            if (ttsControls.classList.contains('active') && 
+                !ttsControls.contains(e.target) && 
+                e.target !== ttsButton) {
+                toggleTTSControls();
+            }
+        });
+        
+        // 页面加载完成后加载小说
+        window.addEventListener('DOMContentLoaded', loadNovel);
+        
+        // 防止页面缩放
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
