@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>猎魔人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #F2E8C1;
+            color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: filter 0.3s ease;
+        }
+        
+        /* 菜单按钮 */
+        #menu-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* TTS控制按钮 */
+        #tts-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 侧边栏 */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background-color: #F2E8C1;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 60px 15px 20px;
+        }
+        
+        #sidebar.active {
+            left: 0;
+        }
+        
+        #sidebar h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        #toc-list {
+            list-style: none;
+        }
+        
+        #toc-list li {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        #toc-list li:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        #toc-list li.active {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        /* TTS控制面板 */
+        #tts-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #F2E8C1;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #tts-controls.active {
+            display: block;
+        }
+        
+        .tts-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tts-label {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .tts-control {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tts-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #F2E8C1;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        
+        .tts-button.active {
+            background-color: #4CAF50;
+        }
+        
+        .tts-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+        
+        .tts-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #F2E8C1;
+            cursor: pointer;
+        }
+        
+        /* 阅读器主体 */
+        #reader {
+            max-width: 100%;
+            margin: 0 auto;
+            transition: font-size 0.2s ease;
+            word-wrap: break-word;
+            text-align: justify;
+            -webkit-text-size-adjust: none;
+        }
+        
+        /* 章节标题样式 */
+        .chapter-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 高亮当前朗读的段落 */
+        .tts-highlight {
+            background-color: rgba(255, 215, 0, 0.3);
+            transition: background-color 0.3s ease;
+        }
+        
+        /* 响应式调整 */
+        @media (min-width: 768px) {
+            #reader {
+                max-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 菜单按钮 -->
+    <div id="menu-button">☰</div>
+    
+    <!-- TTS按钮 -->
+    <div id="tts-button">🔊</div>
+    
+    <!-- 目录侧边栏 -->
+    <div id="sidebar">
+        <h2>目录</h2>
+        <ul id="toc-list"></ul>
+    </div>
+    
+    <!-- TTS控制面板 -->
+    <div id="tts-controls">
+        <div class="tts-row">
+            <span class="tts-label">语音控制</span>
+            <div class="tts-control">
+                <button id="tts-play" class="tts-button">▶</button>
+                <button id="tts-pause" class="tts-button">⏸</button>
+                <button id="tts-stop" class="tts-button">⏹</button>
+            </div>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语速</span>
+            <input type="range" id="tts-rate" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-rate-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音调</span>
+            <input type="range" id="tts-pitch" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-pitch-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音量</span>
+            <input type="range" id="tts-volume" class="tts-slider" min="0" max="1" step="0.1" value="1">
+            <span id="tts-volume-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语音</span>
+            <select id="tts-voice" class="tts-control">
+                <option value="">默认语音</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- 阅读器内容 -->
+    <div id="reader"></div>
+
+    <script>
+        // 直接嵌入的小说内容
+        const novelContent = `
+第一章：骑士
+第一缕晨光，如同最细腻的金色纱幔，穿透了弗兰斯王国首都——派尔斯城——高处的玻璃窗，轻柔地洒在艾莉西亚的眼睑上。她纤长的睫毛颤动了几下，如同被惊扰的蝶翼，随即，那双独特的紫水晶色眼眸缓缓睁开，里面还残留着一丝睡意，但更多的是一种跃跃欲试的明亮。
+今天，是毕业的日子。
+她轻轻呼出一口气，仿佛将过去十几年在骑士学院的所有疲惫与努力都随之吐出。有些不舍地从柔软舒适的被褥中起身，赤足踩在光滑的橡木地板上，微凉的触感让她彻底清醒。晨光勾勒出她初显成熟的身姿，金色的长发即便未经梳理，也流淌着健康的光泽。
+走到窗边，她望向下方已经开始苏醒的学院。训练场上空无一人，但那些熟悉的箭靶、木桩，都承载着她无数的汗水与记忆。今天之后，她将不再是这里的学生，而是一名真正的、受到王国认可的骑士。
+褪下柔软的丝质睡衣，她换上了那套早已准备多时的骑士常服。并非厚重的板甲，而是更适合日常行动的束腰轻甲，皮革为底，关键部位镶嵌着磨光的钢片，既显英气，又不失女性的柔美线条。她动作熟练地将那头灿烂的金发束成利落的单马尾，发梢随着她的动作在肩头跳跃。最后，她拿起靠在墙边的头盔，指尖拂过那冰冷的曲面，眼中闪过一丝坚定。
+推开卧室门，走廊里已经有不少早起的学弟学妹。看到她，年轻的学员们纷纷停下脚步，恭敬地行礼。
+“艾莉西亚学姐，早安！”
+“学姐，恭喜毕业！”
+……
+问候声此起彼伏，带着真诚的敬佩。艾莉西亚——这位骑士学院的传奇人物，以其惊人的骑射天赋和罕见的魔法亲和力，早已成为众多后辈仰望的对象。她微笑着，一一颔首回应，那笑容温暖而富有感染力，紫晶般的眼眸弯成好看的弧度。
+她的优秀，有目共睹。骑射成绩被评为难以置信的“U”级，能在全速奔驰的马背上精准射中百步外移动靶心的神射手，近十年唯她一人。更难得的是，她在魔法一道同样天赋异禀，精神魔法方面，无论是鼓舞友军士气，还是用“威慑”扰乱敌人心神，乃至更危险的“精神撕裂”，她都运用娴熟；此外，她还涉足艰深的空间魔术，虽远未至大师境界，却已能独立制作实用的短程传送卷轴，这在同龄人中堪称凤毛麟角。综合评定“E”（卓越），十七岁提前毕业，这份荣耀，在整个弗兰斯王国的骑士学院历史上也极为罕见。
+而造物主似乎格外眷顾她，不仅赋予她出色的容貌与天赋，还赐予了她一项独特的“月之祝福”——心弦感知。这能力让她能模糊感应到近距离内针对自己的强烈恶意或杀意，在实战中，这近乎是一种预知危险的本能，让她总能先人一步。
+学院餐厅的早餐一如既往的丰盛，新鲜烤制的白面包、浓郁的肉汤、还有弗兰斯特产的水果。但艾莉西亚心中已被期待填满，只匆匆吃了几口，便迫不及待地起身，朝着中央大礼堂走去。
+“铿锵、铿锵……”
+钢制战靴的鞋跟敲击在青石铺就的走廊地面上，发出清脆而富有节奏的声响，与她此刻雀跃的心跳相互应和。她几乎是踩着窗外透入的、愈发温暖的晨曦光斑，小跑着进入了那座恢宏而庄严的大礼堂。
+礼堂内已是人声鼎沸，即将毕业的学员们穿着与她一样的轻甲，脸上洋溢着激动与自豪。家长们、低年级的观礼者坐在观礼席上，目光热切。艾莉西亚找到自己的位置站定，深吸一口气，试图平复过于急促的呼吸。
+片刻后，全场渐渐安静下来。一位身着朴素法师长袍，须发皆白，面容慈祥的老者缓步走上了主席台。他看起来就像一位邻家老爷爷，眼神温和。但在场无人敢因此有丝毫怠慢——他就是骑士学院的校长，温雷萨大师。一位早已隐于幕后的传奇人物，据说其剑术与光明魔法修为深不可测，曾有资格竞争艾拉瑞斯圣堂骑士团团长的职位，最终选择回归学院育人。真正与他交过手的人，才深知在那温和外表下，隐藏着何等恐怖的实力。
+毕业典礼按部就班地进行着。温雷萨校长用平和却蕴含力量的声音，念出一个个毕业生的名字，为他们戴上象征骑士荣耀与责任的蓝色圣剑披风，并别上个人徽章。艾莉西亚紧紧盯着台上，看着同学们一个个完成仪式，心中的期待与焦急几乎要满溢出来。
+“下一位，艾莉西亚·维斯塔小姐。”
+终于听到了自己的名字！艾莉西亚心脏猛地一跳，她几乎是凭借本能，以最标准的步伐，却带着掩饰不住的急切，“踏踏踏”地快步走上主席台。在温雷萨大师面前，她右膝跪地，左手抚胸，行了一个无可挑剔的骑士礼，低下的头颅掩藏不住她微微颤抖的肩膀。
+温雷萨大师看着眼前这位他最杰出的学生之一，眼中闪过一丝不易察觉的欣慰。他拿起那件象征着正式骑士身份的蓝色披风，披风的衬里是弗兰斯王国的代表色——深蓝色，外面则是纯白，边缘绣着金色的圣剑纹章。他仔细地为她系好束带，然后将一枚精致的徽章别在她的左胸甲上。徽章图案是一柄穿透书卷的利剑，周围环绕着橄榄枝，这是弗兰斯王国皇家骑士学院的标志。
+“艾莉西亚·维斯塔，”温雷萨的声音不大，却清晰地传遍整个礼堂，“鉴于你在学期间表现卓越，实力与品德皆为人楷模，尤其是你那令人惊叹的骑射技艺，我谨以学院院长之名，授予你‘隼之骑士’的称号。愿你能如天空的猎隼，目光锐利，行动果决，守护王国的正义与安宁。好好珍惜这份荣誉，它既是光环，亦是枷锁。”
+“隼之骑士”！这是一个带有褒奖性质的荣誉称号，并非所有毕业生都能获得。艾莉西亚心中狂喜，猛地抬起头，紫晶眼眸中闪烁着激动的水光。“感谢校长！我必不负所托！”她再次行了一个标准有力的骑士礼，声音因激动而略显哽咽。
+当她转身，披着那件崭新的蓝色披风走回队列时，她能感受到四面八方投来的、混杂着羡慕、敬佩和祝福的目光。披风在身后微微飘动，带来一种前所未有的沉甸甸的实感。
+当晚的毕业庆典热闹非凡。学院中庭点燃了篝火，准备了丰盛的食物和饮料。毕业生们卸下了沉重的学业负担，尽情欢笑、舞蹈、畅饮。艾莉西亚无疑是人群中的焦点之一，她与朋友们碰杯，分享着过去的趣事，畅谈着未来的理想，银铃般的笑声在夜空中回荡，仿佛要将这幸福的每一刻都深深镌刻在记忆里。
+狂欢终有散场时。次日清晨，天光微亮，艾莉西亚已整装待发。
+她换上了一套更适合远行的轻便锁甲，外面依旧罩着那件醒目的蓝色圣剑披风。隼之骑士徽章在晨光下熠熠生辉。她仔细检查了行李：一张制作精良的长弓，一壶满满的箭矢，一把锋利的佩剑稳稳挂在腰间，以及几枚她亲手制作、闪烁着微弱银光的短程空间传送卷轴和几个记录着鼓舞术、威慑术的精神魔法印记石，这些都被妥善地收在行囊的夹层中。
+马厩里，她那匹名为“追风”的纯血弗兰斯战马似乎也感知到主人的心绪，不耐烦地刨着蹄子。艾莉西亚亲昵地拍了拍它修长的脖颈，利落地翻身上马。
+勒紧缰绳，她最后回头，深深地望了一眼这座承载了她无数汗水、泪水与欢笑的骑士学院。高耸的塔楼，熟悉的训练场，还有那些或许再也难以聚齐的同伴……
+“回家了。”
+她轻声自语，一拉缰绳，调转马头。
+“驾！”
+马蹄声起，打破了清晨的宁静。年轻的隼之骑士，艾莉西亚·维斯塔，踏上了返回位于王国南部，那座名为维斯塔家族庄园的归途。晨风吹拂起她金色的马尾和蓝色的披风，像一面旗帜，在通往未来的道路上猎猎飞扬。
+第二章：归家家何处
+晨光再次洒落，却已不是在学院那熟悉的安全港湾。艾莉西亚勒紧缰绳，“追风”打了个响鼻，喷出的白气在清冷的空气中消散。她最后看了一眼那处给予她一夜庇护的简陋村落，随即一夹马腹，沿着通往南方的道路疾驰而去。
+归家的渴望像一团火，在她胸中燃烧，驱使着她不顾长途跋涉的疲惫，一路狂奔。马蹄声是她此刻唯一想听的乐章，道路两旁的田野和树林飞速向后掠去。直至傍晚时分，天际被染上橙红与紫黛的霞光，她才在一个看起来还算安宁的村落边缘停下。
+翻身下马，双腿因长时间的骑行而有些酸麻。她牵着“追风”，走进村里唯一一家挂着陈旧木招牌的客店。将缰绳交给热情的店主人，嘱咐他好生照料马匹后，艾莉西亚才拖着略显疲惫的步伐走进温暖喧闹的店内。
+她在角落一张木桌旁坐下，点了一份简单的晚餐——硬皮的全麦面包，一碗冒着热气的蔬菜浓汤，外加一杯淡淡的麦酒。她小口咀嚼着食物，耳朵却不由自主地捕捉着周围嘈杂的交谈声。旅店永远是消息流传最快的地方。
+“……千真万确！伊甸西亚那边传来的消息，一位高阶天使大魔法师，据说还是七美德之一的追随者，被刺杀了！”一个粗嗓门的商人对着同桌的人说道，声音里带着难以置信的惊惧。
+“天使族的大人物？他们不是自称神明使者，拥有神圣庇护吗？谁能杀得了他们？”另一人疑惑地反问。
+“谁知道呢？反正通缉令都贴出来了，赏金高得吓人……据说凶手不是一般人……”
+艾莉西亚皱了皱眉，天使族内部的事务距离弗兰斯的普通骑士似乎很遥远，但一位大魔法师的陨落，无疑会在整个艾斯特里昂大陆的势力平衡中投下一块巨石。她不再刻意去听那些添油加醋的议论，目光无意识地在烟雾缭绕的店内扫过，最终，定格在吧台旁边那面斑驳的土墙上。
+一张崭新的羊皮纸通缉令异常醒目。上面用精湛的画工描绘着一个少女的容颜——那是一种超越了种族界限，近乎妖异的美。丝绸般的白色短发，衬得肌肤胜雪。最令人过目难忘的是那双异色瞳眸，一只如熔金般璀璨，另一只却似血池般殷红，对比强烈到令人心悸。精致的嘴角微微上扬，露出一颗俏皮的小虎牙，为这张本该圣洁或邪魅的面孔增添了几分天真与狡黠。即使只是一幅画像，也能想象其本人该是何等风华绝代。
+然而，画像下方，用刺目的朱红色墨水标注的名字和悬赏金额，却与这美丽形成了残酷的反差：
+瑟莉蕾娜·加百列·路西法·赫拉特
+种族：天使/恶魔混血
+状态：极度危险
+悬赏：500,000金币
+五十万金币！艾莉西亚的呼吸微微一滞。她清楚地知道这笔财富意味着什么。一个辛勤劳作的农民，终其一生也难以积攒下一个金币。这笔悬赏，足以买下一座城池，或者雇佣一支规模可观的私人军队。是何等深仇大恨，或是何等巨大的威胁，能让高傲的天使族不惜开出如此天价，来追捕这个看似柔美的混血少女？而那个死去的天使大魔法师，与她又有何关联？谁又有能力在天使的国度完成如此骇人听闻的刺杀并全身而退？种种疑问在她脑海中盘旋，让她对这纸通缉令背后的故事产生了一丝难以言喻的好奇，以及一丝本能的警惕。
+在客店休整一夜，次日黎明，艾莉西亚再度启程。离家越近，心中的期待便越是炽热。马蹄敲击在铺石路上的“咔哒”声，此刻听来不再仅仅是赶路的节奏，更像是一首催促归家的欢快乐章，轻柔地撩拨着她的心弦。
+她快马加鞭，计算着行程，若无意外，傍晚时分就能看到维斯塔庄园那熟悉的白色栅栏和袅袅炊烟。
+然而天有不测风云。正午刚过，原本晴朗的天空骤然阴沉，铅灰色的乌云低低压下，顷刻间，瓢泼大雨倾泻而下，密集的雨线模糊了前方的视线。艾莉西亚不得不策马跑到路边一棵巨大的橡树下暂避。雨水敲打着树叶，发出哗啦啦的声响，整个世界仿佛都被笼罩在一片水幕之中。
+就在这嘈杂的雨声里，她注意到一些不寻常的景象——三三两两的百姓，拖家带口，默不作声地从她来的方向，也就是维斯塔庄园所在的方向走来。他们大多低着头，步履匆忙，脸上带着一种近乎麻木的沉郁，彼此之间几乎没有交谈，只是沉默地向前走，仿佛身后有什么可怕的东西在驱赶他们。这反常的景象让艾莉西亚心中升起一股莫名的不安，归家的急切中掺入了一丝阴霾。
+雨势稍减，从瓢泼大雨转为绵绵细雨，艾莉西亚立刻重新上路。她刻意避开了那些沉默的人流，选择了一条更偏僻、但能更快抵达庄园的林间小道。马蹄踏过泥泞的路面，溅起细小的水花。
+然而，当她终于穿过最后一片树林，视野豁然开朗，期盼已久的家出现在眼前时，映入眼帘的景象却让她浑身的血液瞬间冻结。
+没有熟悉的白色栅栏，没有袅袅炊烟，没有迎接她的仆人……只有一片触目惊心的废墟。
+曾经优雅的维斯塔庄园主楼，如今只剩下几段焦黑的断壁残垣，如同被巨兽啃噬过的骨架，无力地指向灰暗的天空。精美的花园化为焦土，雕塑碎裂，喷泉干涸。更让她肝胆俱裂的是，在那泥泞和瓦砾之间，隐约可见倒伏的身影——那是曾经熟悉的面孔，如今却已失去生机，与冰冷的雨水和泥土融为一体。
+“不……不可能……”她喃喃自语，声音微不可闻。
+她猛地翻身下马，踉跄着冲向那片废墟。“父亲！母亲！”她的呼喊声在空旷的废墟上空回荡，却被更大的雷声无情地淹没。
+天空仿佛也感受到了她的绝望，刚刚减弱的雨势骤然加大，冰冷的雨水如同瀑布般浇灌而下，瞬间浸透了她的披风、她的锁甲、她的金发。她站在倾盆大雨中，呆呆地看着眼前的人间地狱，身体无法控制地颤抖起来。
+泪水汹涌而出，混合着冰冷的雨水，滑过她苍白的脸颊。她分不清哪是雨，哪是泪，只觉得一种撕心裂肺的痛楚从心脏蔓延至四肢百骸。她希望这只是一场噩梦，只要醒来，就能看到母亲温柔的笑容，听到父亲沉稳的问候。
+她发疯似的在废墟中翻找，徒劳地希望能找到一丝生机，一点线索。纤细的手指被焦黑的木刺和锋利的碎石划破，鲜血混入泥水，她却感觉不到疼痛。最终，她只在主厅遗址的灰烬中，找到了一小块碎裂的水晶——那是镶嵌在家族纹章盾牌上的中心装饰物，如今只剩下不规则的一角，边缘焦黑，依稀能看出维斯塔家族雄鹰翅膀的纹路。
+她紧紧攥着那枚冰冷的水晶碎片，指节因用力而发白。将它小心翼翼地放进贴身的储物介质中，那冰冷的触感仿佛直接烙在了她的心上。
+艾莉西亚彻底懵了。十几年的骑士训练，教会了她如何战斗，如何守护，却从未教过她如何面对如此彻底、如此残酷的失去。她站在滂沱大雨中，站在家园的坟墓前，第一次感到自己是如此的渺小和无助。雨水冲刷着废墟，也冲刷着她年轻的、刚刚启程便被无情击碎的梦想。未来，在这一刻，变得一片模糊，只剩下无尽的雨水和彻骨的寒冷。
+第三章：深渊之孽
+仿佛时光在她身上加速流逝了数十年，仅仅几分钟，艾莉西亚那头象征青春与活力的灿烂金发，竟以肉眼可见的速度失去了所有色彩，变得如同霜雪般纯白，与她苍白无血色的脸庞形成一种凄厉的对比。她的一切，在顷刻间崩塌——承载童年与荣耀的庄园，血脉相连的至亲，以及刚刚获得的、本以为能光耀门楣的骑士身份……全都化为了眼前这片冰冷的废墟。
+失去了维斯塔家族的庇护，她，一个刚刚毕业的初等骑士，在弗兰斯王国庞大而复杂的权力结构中，渺小如尘。唯一的出路似乎只有参军，从最底层做起，凭借军功一步步向上攀爬。但这念头本身就如同一个冰冷的笑话。王国内部的政治漩涡她早有耳闻，盘根错节的关系网远比战场上的敌人更可怕。没有背景和靠山，像她这样的年轻骑士，最大的价值往往就是成为消耗品，被派往最危险的战场，最终马革裹尸，运气好或许能换来一道轻飘飘的追封令，仅此而已。
+眼泪早已流干，只剩下干涸的刺痛感留在眼眶。她无力地跪在泥泞与灰烬之中，感觉自己的心也随着这片庄园一起死去了，空荡荡的，只剩下呼啸的冷风。
+就在这精神恍惚的至暗时刻，一股强烈到让她汗毛倒竖的威胁感如同冰锥般刺入她的意识！是【心弦感知】！那并非针对性的恶意，而是某种纯粹、混乱、充满毁灭欲望的存在正在逼近！
+骑士的本能压倒了个人的悲痛。她几乎是凭借肌肉记忆，猛地向侧后方翻滚，同时“铿锵”一声，腰间的佩剑已然出鞘，横在身前！
+几乎就在同一瞬间，一道裹挟着恶风的黑影猛扑而至，狠狠撞击在剑刃之上！
+“铛——！”
+金铁交鸣的爆响震得她耳膜发聩。一股巨大的力量从剑身传来，艾莉西亚虎口崩裂，鲜血瞬间沁出，整个人被震得踉跄后退了五六步才勉强站稳。
+她死死盯住攻击的来源，瞳孔骤然收缩。那绝非艾斯特里昂大陆上任何已知的自然生物！它大致保持着狼的形态，却完全由不祥的黑色晶体包裹、拼接而成，晶体缝隙间透出暗紫色的、仿佛由纯粹能量构成的躯体，不断散发出令人作呕的诡异烟雾。它的背上生长着狰狞的晶体尖刺，四肢落地处，周围的草木以肉眼可见的速度枯萎焦黑。
+深渊魔物！
+学院图馆中那些描绘着恐怖侵蚀景象的插图瞬间涌入脑海。正是这种来自远古禁忌战争的遗留之孽，摧毁了她的家园！
+一击不中，那晶体狼形魔物发出无声的咆哮（或许只是能量的剧烈震荡），再次猛冲过来。它的速度极快，爪击蕴含着撕裂钢铁的力量。艾莉西亚咬紧牙关，挥动骑士长剑连连格挡，“铛！铛！铛！”每一次碰撞都让她手臂酸麻，几乎握不住剑柄。怪物的攻击毫无章法，却充满了毁灭性的力量。
+瞅准一个空隙，艾莉西亚用尽全身力气隔着剑身猛地向前一推，暂时逼退了怪物半步，随即手腕一抖，长剑如毒蛇出洞，精准地刺入了怪物那闪烁着紫光的晶体眼眶之中！
+“吼——！”
+这一次，怪物发出了实质性的、充满痛苦与狂怒的嘶吼。它猛地甩头，将长剑震开，碎裂的眼眶处迸发出更加刺目的紫光。紧接着，让艾莉西亚心底一沉的事情发生了——那被刺穿的眼眶，周围的黑色晶体和紫色能量如同活物般蠕动、交织，竟在眨眼间恢复如初！
+再生能力！
+不能硬拼！艾莉西亚脑海中警铃大作。她迅速后撤，躲到一根尚未完全倒塌的巨大石柱后面，屏住呼吸。怪物失去了目标，开始焦躁地徘徊，晶体构成的鼻子（如果那能算是鼻子）抽动着，寻觅着生者的气息。
+冷汗沿着艾莉西亚的额角滑落。物理攻击效果有限，弓箭尝试过也无用……她的目光扫过周围，最终落在了藏身的这根承重柱上。一个冒险的计划瞬间成型。
+她深吸一口气，猛地从藏身处冲出，并非冲向怪物，而是捡起地上一块碎石，用尽全身力气狠狠砸向怪物的后背！
+“砰！”石头在晶体甲壳上撞得粉碎，但这侮辱性的攻击成功激怒了本就狂躁的魔物。它发出一声咆哮，四爪刨地，如同黑色的闪电般朝艾莉西亚猛冲过来！
+就是现在！
+艾莉西亚眼神一凛，在怪物即将撞上她的前一刻，一个灵巧的侧滑步闪到石柱的另一侧。同时，她一直扣在左手的一张羊皮卷轴被迅速拍在了石柱的基座上！卷轴上银色的符文瞬间亮起，散发出扭曲空间的波动。
+【初级空间置换卷轴】！
+“轰隆——！！！”
+一声沉闷而非爆炸的巨响传来。石柱底部约一米高的部分，连同其承载的巨石，在一阵银光闪烁中突兀地消失了！失去了支撑，巨大的石柱带着万钧之势，朝着预判的方向轰然倒塌！
+时机恰到好处！
+晶体狼形魔物正好冲至石柱下方，被这突如其来的、重达数吨的巨石结结实实地压在了底下！碎石飞溅，烟尘弥漫，怪物只来得及发出一声短促的哀鸣，便被彻底掩埋，只有几缕残存的、带着浓烈恶意的紫色烟雾从废墟缝隙中丝丝缕缕地渗出。
+战斗结束了，但艾莉西亚没有丝毫胜利的喜悦。她拄着剑，大口喘息着，虎口的鲜血顺着剑柄滴落。看着那被压在巨石下的魔物残骸，再环顾四周这片同样沦为废墟的家园，一种无边的悲凉和虚无感将她吞噬。
+她失魂落魄地离开了维斯塔庄园的废墟，像一具被抽走了灵魂的空壳，漫无目的地游荡。刚刚经历了灭门之痛，又进行了一场生死搏杀，她的心灵和身体都已到达极限。她渴望安慰，渴望一个可以依靠的港湾，但举目四望，家人已成永诀，同伴远在天涯。
+最终，本能驱使着她找到了一处位于偏僻路旁的小酒馆。此时已是深夜，酒馆内灯火昏暗，只有几个醉醺醺的旅人。她找了个最阴暗的角落坐下，将头盔放在桌上，发出的声响引来了店主的目光。
+她摸出一枚银币，放在桌上，声音沙哑：“啤酒，二十杯。”
+店主愣了一下，看了看她苍白的头发、染血的轻甲以及那双空洞无神的紫水晶眼眸，似乎明白了什么，默默地收下银币，很快端来了大量的木质酒杯，琥珀色的液体在昏暗灯光下晃动。
+艾莉西亚端起酒杯，开始机械地往喉咙里灌。苦涩的液体冲刷着口腔，却冲刷不掉心中的苦涩。喝到第九杯，酒精开始发挥作用，麻木的神经稍稍放松，一直被压抑的悲痛决堤而出。她趴在桌子上，肩膀微微耸动，无声地哭泣起来。
+喝到第十五杯，她的神智已经有些模糊，视线也变得迷离。世界仿佛隔了一层毛玻璃，悲伤却更加清晰锐利。她不再压抑，放声痛哭，泪水浸湿了手臂下的木质桌面。
+当二十杯啤酒终于全部灌入胃中，强烈的晕眩和恶心感袭来。她彻底醉倒在了桌子上，手中还紧紧攥着一个空酒杯，雪白的头发散乱地铺开，如同凋零的百合。
+好心的酒馆主人叹了口气，拿过一张厚实的、带着霉味的羊毛毯，轻轻披在了这个显然遭受了巨大创伤的年轻骑士身上。
+就在艾莉西亚陷入酒精带来的、并不安稳的沉睡时，一阵夜风从未关严的门缝中吹入，卷起了吧台上几张散乱的悬赏令。其中一张质地稍硬的羊皮纸，打着旋儿，不偏不倚，恰好飘落到了她的手臂旁边。
+羊皮纸上用醒目的字体写着：
+【人类诸国联合征召令】
+目标：歼灭西克尔德联合王国君主——伊萨多里·撒旦·赫拉特
+赏格：
+- 世袭封地，纵横八百里
+- 金币一亿枚
+- 授予“人族勇者”之至高荣誉，其名永载史诗丰碑
+有意参与者，请前往艾拉瑞斯王国首都——圣帕尔斯城登记。
+人类的英雄，等待你的到来！
+那张代表着无尽财富、权力与荣耀，也预示着无法想象危险的征召令，就静静躺在醉倒的、失去一切的隼之骑士手边，仿佛命运抛下了一个冰冷而讽刺的诱饵。
+第四章：纨绔子弟
+艾莉西亚在酒馆的角落里醉得不省人事，那张承载着巨大诱惑与危险的联合征召令，仅仅在她手边停留了片刻，便被另一阵穿堂风吹走，混入地上的污渍与垃圾之中，未能唤醒这位身心俱疲的骑士。然而，这则消息如同投入平静湖面的巨石，在弗兰斯、布罗德、艾拉瑞斯、艾斯坦蒂斯等所有人类王国中，激起了滔天巨浪。
+一亿金币！纵横八百里的世袭封地！永载史册的“人族勇者”称号！每一个词汇都足以让野心家、亡命徒、以及渴望改变命运的强者心跳加速。酒馆、市集、贵族沙龙，所有人都在热议这份前所未有的悬赏。但狂热之下，是难以掩饰的深深忌惮。西克尔德联合王国——那片由恶魔、血族和堕天使共同统治的土地，其强大的军事力量早已是大陆公认的事实。恶魔军团的狂暴，血族魔法师的诡谲，堕天使骑士的迅捷与致命，无一不是战场上的噩梦。而他们的共主，那位名为 伊萨多里·撒旦·赫拉凡特 的魔王，其力量更是深不可测，传闻中早已超越了凡俗的界限。渴望与恐惧，这两种情绪在人类国度中交织、发酵。
+艾拉瑞斯王国，德兰城。
+这座以商业和繁荣著称的巨大城市，是克劳多斯公爵的封地，街道上车水马龙，商铺林立，来自大陆各处的商品在此汇聚，空气中也仿佛弥漫着金币的味道。在城中心最奢华的公爵府邸深处，一间充斥着熏香与脂粉气的卧室内，正上演着与外界热议的英勇与牺牲格格不入的糜烂景象。
+库恩·克劳多斯，公爵的独子，正赤着上身，慵懒地陷在一堆柔软的丝绸靠垫中。他拥有一头如同阳光般耀眼的金发，翠绿色的眼眸本该清澈如宝石，此刻却只盛满了酒色过度带来的浑浊与一种居高临下的自负。他相貌确实英俊，足以迷惑不少不明就里的少女，但在这德兰城，他的名声早已与“人渣”、“恶棍”紧密相连。
+自从老克劳多斯公爵因日益繁重的政务和领地管理而无暇他顾，库恩便彻底挣脱了束缚，将“纨绔子弟”这四个字诠释到了极致。他终日流连于自己的寝宫，身边总是环绕着数名衣衫不整、媚眼如丝的女伴，沉溺于声色犬马，行事放荡，不知廉耻为何物。凭借着父亲的权势，他在德兰城内横行霸道，敲诈商户、欺压平民、流连赌场妓院，可谓无恶不作。老公爵最初还试图管教，但在几次激烈的冲突和库恩阳奉阴违的伎俩后，最终被无尽的公务和一种无奈的失望所淹没，选择了听之任之。
+为了维持自己“强大”的虚荣形象，库恩也曾装模作样地学习过魔法。但他缺乏耐心与毅力，贪多嚼不烂，光明魔法嫌枯燥，元素魔法嫌费力，黑暗魔法又觉得有失身份，最终只落得个样样都会一点，却无一精通的花架子水平。
+然而，虚荣心驱使他渴望拥有配得上他“身份”的力量。为此，他不惜铤而走险，通过某种隐秘的渠道，与一个来自深渊边缘的血魔进行了交易。交易的具体内容无人知晓，但交易的结果，便是此刻随意靠在床边的那柄奇形兵刃——吸血鬼之牙。
+这柄长刀通体呈现出不祥的血红色，仿佛由凝固的血液铸造而成。刀身上并非光滑的金属，而是镶嵌着某种坚硬且仍在微微搏动的暗红色血肉，以及数颗尖锐的、散发着寒光的红色獠牙。它散发着浓郁的血腥气和魔法波动，能够通过消耗使用者的生命力（寿命）来瞬间爆发出恐怖的威力。库恩只看到了它带来的力量，却选择性忽视了这力量背后血魔那狰狞的微笑——一旦库恩因过度使用此刀或因其他原因生命耗尽，那潜伏在刀中的血魔意识，便能轻而易举地占据这具尚算年轻健康的躯壳。
+或许是为了与这柄邪门的武器“相配”，库恩在选择“日之祝福”时，出人意料地选择了 【不灭余火】——在身受致命伤后，能强行维持一小段时间的意识。在他看来，这能力毫无用处，以他的身份和（自以为的）实力，怎么可能陷入那种濒死绝境？这不过是他众多“收藏”中一个略显特别，但永远也用不上的点缀罢了。
+此刻，库恩一只手漫不经心地在一名女伴光滑的脊背上游走，另一只手则捏着那张人类联合征召令，嘴角撇着一抹极尽轻蔑的冷笑。
+“呵，”他嗤笑两声，声音带着纵欲后的沙哑和一种盲目的狂妄，“这么想给本大爷送钱花啊？封地、金币、荣誉……倒是挺懂事。不就一个魔王吗？伊萨多里·撒旦·赫拉凡特……名字倒是挺长，至于让你们这群窝囊废怕成这样？”
+围在他身边的女人们立刻发出阵阵矫揉造作的附和：
+“库恩少爷神勇无敌，什么魔王，在您面前也不过是土鸡瓦狗！”
+“就是就是，少爷您要是出马，肯定手到擒来！”
+“到时候您就是人类的英雄了，可别忘了我们呀……”
+这些阿谀奉承如同最醇的美酒，让库恩本就膨胀的自信心几乎要冲破屋顶。在他的认知里，恶魔？不过就是些长相丑陋、头脑简单的生物，所谓的魔王，大概也就是个强壮点的恶魔头子罢了。凭他库恩少爷的“实力”，再加上神器“吸血鬼之牙”的辅助，斩杀一个恶魔头子，岂不是易如反掌？
+一种想要证明自己，想要让所有曾经轻视他的人（尤其是他那忙碌的父亲）刮目相看的强烈冲动，混合着对那惊人赏格的贪婪，在他胸中熊熊燃烧起来。
+他仿佛已经看到自己提着魔王的首级，在万众欢呼中凯旋，接受国王册封，成为万人景仰的勇者，到时候，看谁还敢在背后说他库恩·克劳多斯是个不学无术的废物！
+“决定了！”他猛地坐起身，将手中的征召令随手一扔，脸上露出志在必得的笑容，“本少爷就去会会那个所谓的魔王，顺便把那份赏金和荣誉拿回来玩玩！”
+在他的幻想中，这场即将到来的远征，不过是一场盛大的、专为他准备的个人秀。至于其中的危险与残酷，早已被他的自负与无知彻底屏蔽。
+第五章：圣帕尔斯
+库恩·克劳多斯确实踏上了前往圣帕尔斯城的路途。一路上，他脑海中早已预演了无数次自己以英雄姿态凯旋的场景，那亿萬金币、八百里封地和无上荣光，仿佛已是他的囊中之物。
+初到艾拉瑞斯王国的首都，即便是库恩这般狂妄之人，也不由得被眼前的景象所震慑，稍稍收敛了在德兰城那般肆无忌惮的做派。圣帕尔斯城，这座被誉为“圣光之源”的宏伟城邦，其规模与威严远非德兰城可比。城市的中心是那座巍峨壮丽的艾拉瑞斯皇宫，纯白色的巨石筑成的宫殿群在阳光下闪烁着圣洁的光辉，高耸的尖塔仿佛要刺破苍穹。以皇宫为中心，东西南北四个方向分别矗立着四座仅次于皇宫的巨型建筑——行政宫、军事枢机宫、监察院和神圣审阅殿，它们共同构成了艾拉瑞斯帝国庞大政治机器的核心。向外辐射，则是规划整齐的生活区与繁华的商业区，尖顶的艾拉瑞斯风格建筑鳞次栉比，街道宽阔，石砖铺地，秩序井然，处处彰显着古老帝国的底蕴与威仪。
+库恩混在熙熙攘攘的人流中，背后交叉背负着他那柄装饰华丽（但实用性存疑）的双头剑，以及用特殊皮质刀鞘封藏、依旧散发着若有若无血腥气的“吸血鬼之牙”。他的目光在人群中逡巡，带着挑剔与傲慢，寻觅着他心目中配得上与他这位“未来英雄”组队的“人才”。四面八方涌来的冒险者、佣兵、骑士、法师，形形色色，大多眼神炽热，谈论着那份足以让任何人疯狂的悬赏。
+就在这人声鼎沸之中，一道独特的身影骤然攫取了他的视线。
+那是一位白发的女子。并非衰老的苍白，而是一种如同月光织就的银白，长发被利落地束成单马尾，垂在身后。她身穿着便于行动的冒险者服装，材质普通却整洁，勾勒出矫健的身姿。最引人注目的是她那双紫水晶般的眼眸，清澈，却沉淀着化不开的哀伤，仿佛承载着某种巨大的创痛。她的五官精致得如同精灵的艺术品，但眉宇间却凝着一股挥之不去的郁气。她背上是一张制作精良的长弓，腰间佩着一柄看似寻常的骑士长剑，而在另一侧，一枚碎裂的紫色水晶被她小心地系在腰带上，水晶上依稀可见弗兰斯风格的鎏金纹饰，仿佛是她与过往唯一的联结。
+此人正是艾莉西亚。在酒馆中从宿醉与悲痛中醒来后，她捡起了那张被风吹落的征召令。家族的覆灭、亲人的逝去，如同冰冷的烙印刻在她的灵魂深处。但在无尽的悲伤之后，一种更为坚定的东西在她心中滋生——重振维斯塔家族的荣光，哪怕只剩下她一人，哪怕前路荆棘遍布。这看似不可能完成的屠魔任务，或许是她唯一能抓住的、通往力量与复仇的渺茫希望。于是，她擦干眼泪，将悲伤压在心底，也来到了这片汇聚了无数野心与梦想的土地。
+在前往圣帕尔斯的旅途中，她结识了一位名为奥卡提斯的少年。他沉默寡言，有着一头利落的金色短发，面容苍白却异常英俊，带着一种与年龄不符的阴郁气质。他穿着一身最普通的麻布衣衫，唯一的装备是一柄看起来颇为华丽、装饰着古老符文的长剑，与他朴素的衣着格格不入。艾莉西亚并未过多探听他的来历，同是天涯沦落人（她如此认为），两人便结伴而行。
+库恩的目光几乎瞬间就黏在了艾莉西亚身上，那混合着脆弱与坚韧的独特气质，以及无可挑剔的容貌，立刻激起了他强烈的占有欲。他整理了一下自己华贵的衣袍，脸上堆起自以为迷人的笑容，大步走上前去，完全无视了艾莉西亚身旁的奥卡提斯。
+“这位美丽的小姐，”库恩的声音带着刻意的优雅，“在下库恩·克劳多斯，德兰城公爵之子。看您气质不凡，也是为讨伐魔王而来？正巧，本少爷正在组建一支精英队伍，像您这样的人才，正是我们急需的。跟着我，保证你能轻松获得那份悬赏，享尽荣华富贵。”他的话语充满了诱惑，同时眼神不自觉地流露出对艾莉西亚美貌的贪婪。
+随即，他似乎才注意到旁边的奥卡提斯，眼中立刻闪过毫不掩饰的轻蔑。他上下打量着奥卡提斯那身朴素的麻衣，嗤笑道：“至于这位……朋友？我劝你还是量力而行。看看你这身行头，再看看我这柄家传的‘吸血鬼之牙’（他刻意拍了拍刀鞘），这可是真正的神器！再看看你的剑，华而不实罢了。本少爷精通各类魔法，学识渊博，而你，恐怕连最基础的元素操控都费劲吧？相貌嘛……死气沉沉的，如何能保护这位美丽的小姐？”
+他极力贬低奥卡提斯，试图通过对比抬高自己，言语间充满了富家子弟的优越感和无知者的狂妄。然而，艾莉西亚的紫瞳中只有一片冰冷。库恩那毫不掩饰的色欲和肤浅的炫耀，让她从心底感到厌恶。
+“感谢您的好意，克劳多斯先生。”艾莉西亚的声音平静而疏离，带着不容置疑的拒绝，“但我已有同伴，并且对您的队伍没有兴趣。告辞。”
+说完，她甚至没有多看库恩一眼，只是对身旁一直沉默不语的奥卡提斯微微颔首，便转身汇入人群。奥卡提斯自始至终没有任何表情，仿佛库恩那番挑衅的话语只是耳旁风，他默默地跟上艾莉西亚的脚步，金色的短发在人群中若隐若现。
+库恩脸上的笑容瞬间僵住，随即转为恼羞成怒的铁青。他堂堂公爵之子，竟然被一个来路不明的女人和一个穷酸小子如此无视！这简直是他生平最大的耻辱！
+“哼！不识抬举！”他盯着两人消失的方向，咬牙切齿地低吼。强烈的挫败感和被轻视的愤怒，让他本就狭隘的心胸被彻底填满。
+既然软的不行，那就来硬的！他要让所有人知道，得罪他库恩少爷是什么下场！更重要的是，他要证明自己的“实力”，让那个眼高于顶的女人后悔！
+被怒火和扭曲的虚荣心驱使，库恩立刻行动起来。他利用随身携带的大量金币，迅速在鱼龙混杂的佣兵聚集地，雇佣了四五个看起来凶神恶煞、只认钱不认人的亡命之徒。
+就这样，一支由纨绔子弟领头，由贪婪佣兵组成的、动机不纯且结构松散的队伍，怀揣着荒唐的野心和虚伪的信念，也踏上了讨伐魔王的征途。他们的目标，早已从最初的悬赏，悄然扭曲成了报复与证明，而等待他们的，将是西克尔德那片危机四伏、远超他们想象的残酷土地。
+第六章：死灵法师
+暂时摆脱了库恩那令人作呕的纠缠，艾莉西亚与奥卡提斯继续在圣帕尔斯城熙攘的街道上穿行，寻找着足以填补队伍空缺的第三位同伴。根据征召令的要求，报名参与这次史无前例的远征，至少需要三人组成小队。奥卡提斯的沉默寡言中透着可靠的坚韧，艾莉西亚信任这位路上结识的同伴，但两人之力，面对西克尔德的恶魔军团与那位深不可测的魔王，依旧显得单薄。
+“我们分头寻找吧，”艾莉西亚提议，紫水晶般的眼眸扫过人流，“这样效率更高些。日落前，我们在中央皇宫前的英雄广场汇合。”
+奥卡提斯没有多言，只是微微颔首，那双带着阴郁气息的眼睛表示同意，随即转身融入另一个方向的人潮，他金色的短发在阳光下短暂一闪，便消失了踪影。
+独自一人的艾莉西亚，稍稍松了口气。她沿着以白色巨石铺就的宽阔街道漫步，目光既在搜寻着可能具备实力的潜在队友，也在不自觉间，被圣帕尔斯城独特的建筑美学所吸引。艾拉瑞斯风格的建筑，以其高耸的尖顶、繁复的浮雕和纯净的白色基调而闻名，它们如同一个个指向天空的白色惊叹号，在蓝天下勾勒出庄严而梦幻的天际线。行走其间，仿佛置身于一个由秩序、信仰与魔力共同编织的国度，暂时抚慰了她心中那难以愈合的创痛。
+她的目光掠过街道两旁。左边，是庞大恢宏的光明大教堂，彩绘玻璃窗在阳光下流淌着瑰丽的光河，隐约能听到里面传来的庄严圣歌；右边，则是圣帕尔斯城最负盛名的酒店——“神赐之手”，其外观之华丽不输任何贵族府邸，进出的皆是衣着光鲜的显贵与强大的冒险者；而正前方，一栋尤为高大的建筑矗立着，门口悬挂着交叉的剑与法杖徽记——那是无数传奇故事的起点，冒险者公会的总部所在地。
+“咔哒、咔哒……”
+她那双适合长途跋涉的短靴，踩在光滑的石板路上，发出清晰而孤独的回响。这规律的声音，仿佛一种无意识的安抚，让她纷乱的心绪稍稍沉淀。然而，她也深知，在这座汇聚了人类世界无数野心与梦想的都城里，真正的强者，往往并非那些在光鲜处高谈阔论之辈，更可能藏匿于不为人知的阴影角落。
+她的直觉引领着她偏离了主干道，拐入了一条相对僻静的狭窄小巷。阳光被高耸的建筑切割，只投下斑驳的光块，空气中也弥漫着与主街格格不入的、潮湿而陈旧的气息。就在巷子深处，她瞥见了一个模糊的黑色身影，如同融入阴影的一部分。
+心中微动，艾莉西亚下意识地放轻了脚步，运用起骑士训练中潜行的技巧，悄然跟了进去。越往深处，一股混杂的气味便隐隐传来——并非单纯的污秽，而是更令人不安的味道：一丝若有若无的血腥气，混合着某种类似墓穴的腐朽味，以及……一种火焰灼烧有机物后留下的、令人喉头发紧的焦糊味。
+她屏住呼吸，在一堆废弃的木箱后停下，小心地探出头。
+巷子尽头是一面斑驳的石墙。墙上，被人用某种暗红色的、尚未完全干涸的颜料，绘制了一个约莫圆盾大小的复杂魔法阵。阵法的纹路扭曲而古老，散发着不祥的微光。
+一个身着纯黑色长袍的男子背对着她，站在法阵前。他身形修长，黑色的短发利落而整洁。此刻，他正抬起一只手，指尖萦绕着肉眼可见的、带着死亡气息的暗影魔力，低声吟唱着晦涩的音节。那魔法阵中的暗红色颜料仿佛活了过来，如同血液般蠕动、汇聚，最终在阵中心升腾而起，构成一只乌鸦的形态。
+但这绝非自然的生灵。它通体漆黑，羽毛却像是用阴影编织，眼眶中燃烧着两点幽绿的灵魂之火，尖喙与利爪闪烁着金属般的寒光。它拍打着翅膀，落在黑衣男子的手臂上，没有发出任何鸣叫，只是歪着头，用那绿色的魂火“注视”着周围，完美诠释了何为“不祥”。
+死灵魔法！
+艾莉西亚心中一震。这是被各国明令禁止、被视为亵渎生命的最危险法术之一。然而，奇怪的是，她的【心弦感知】并未传来针对她的恶意或杀意。施法者的气息冰冷而沉寂，如同深潭，却并无主动攻击的意图。
+男子似乎并未察觉她的存在，手臂轻轻一振，那只由死灵能量与鲜血构筑的乌鸦便无声地振翅高飞，扑腾着阴影构成的翅膀，迅速升高，消失在巷子上方狭窄的天空中。
+就在这时，背对着她的男子忽然开口，声音平静，带着一丝不易察觉的警惕，仿佛早已洞悉她的到来：“你是谁？”他的声音不高，却在这寂静的小巷中格外清晰。
+艾莉西亚心头微惊，但既然已被发现，便不再隐藏。她从木箱后走出，保持着安全距离，声音同样平稳：“一个一无所有的骑士。”她试图用简洁的回答掩饰内心的波澜和真实的伤痛。
+她能感觉到，对方身上似乎掠过一丝极淡的敌意，但转瞬即逝，如同水滴落入深井，再无涟漪。
+“讨伐魔王的勇士？”男子依旧没有回头，仿佛对她的动向瞭如指掌。
+“我想参与……但是……”艾莉西亚斟酌着用词。
+“人数不够？”男子直接点破，他的语气平淡，却带着一种洞察一切的意味，仿佛艾莉西亚来到圣帕尔斯城后的一切经历，都早已落在他眼中。
+艾莉西亚紫瞳中闪过一丝疑惑，但没有追问。在这个充满未知与强者的城市，保持一定的谨慎总是好的。
+黑衣男子终于有了动作。他微微侧过头，但角度巧妙，并未露出他的真实面容，只是露出了线条优美的下颌轮廓。“其实，我早已注意阁下一上午了。”他的话语让艾莉西亚心中再起波澜，“希望我能与阁下一同讨伐魔王，但是……”
+他顿了一顿，语气带上了一丝罕见的郑重：“接下来看到的，我希望阁下不要惊慌，也不要大喊大叫……”
+话音未落，艾莉西亚浑身的寒毛瞬间炸起！【心弦感知】传来前所未有的尖锐警报！威胁并非来自前方的黑衣男子，而是来自她的身后！
+她甚至来不及完全转身，只觉后腰处被一个冰冷、坚硬的东西抵住！那触感绝非活物！
+骑士的本能让她瞬间反应，左手闪电般向后探出，精准地抓住了抵住她的“手腕”——然而，入手的感觉让她心底一沉！那是一只没有任何温度、只有骨骼的冰冷之手！
+她用力一扭，试图制服对方，却只听得到骨骼摩擦的“嘎吱”声，那力量远超常人！借着余光，她看到了——一具完整的、眼窝中跳动着幽蓝色火焰的骷髅，正无声无息地站在她身后！它另一只骨手中握着一柄锈迹斑斑但锋刃依旧锐利的短刀，此刻，那刀锋已经从她的后腰，移到了她脆弱的脖颈上，冰冷的触感让她皮肤战栗。
+艾莉西亚僵住了，不敢再有任何动作。她毫不怀疑，只要自己稍有异动，那柄短刀会毫不犹豫地割开她的喉咙。
+这时，黑衣男子缓缓地、完全转过身来。
+他拥有着一张堪称俊美的脸庞，五官轮廓深邃而优雅，如同古典雕塑。但这份俊美，却被他非人的特征所打破——他的皮肤是毫无血色的苍白，仿佛久未见光；那双瞳孔，是如同最纯净红宝石般的猩红；当他微微张口，似乎想说什么时，艾莉西亚清晰地看到了他唇边若隐若现的、尖锐的犬齿。
+血族！而且是一位掌握了死灵法术的血族！
+艾莉西亚心中警铃大作，瞬间明白了那血腥与腐朽气息的来源。一个精通死灵魔法的血族，其实力与危险程度，远非普通黑暗生物可比。他更加诡异，更加难以揣测，也更加致命！
+然而，预料中的攻击并未到来。那名为希尔斯的血族男子，只是看着她眼中无法完全掩饰的惊惧与强自的镇定，轻轻叹了口气。那叹息声中，似乎带着一丝……无奈与疲惫？
+“看到血族，你不害怕吗？”他红宝石般的眼眸注视着她，带着一丝探究。
+艾莉西亚紧咬着下唇，直到尝到一丝血腥味才迫使自己冷静下来。她迎上那双非人的眼眸，努力让自己的声音不带颤抖：“我不喜欢打探别人的过去。”这句话，既是对他的回应，也是对自己原则的坚守。每个人都有不愿提及的往事，正如她碎裂的家徽水晶。
+希尔斯尼拉闻言，那双猩红的眼眸中似乎掠过一丝极淡的、类似赞赏的情绪。他轻轻抬手，做了一个微妙的手势。
+下一刻，艾莉西亚感到脖颈上的冰冷压力骤然消失。那具骷髅侍卫如同它出现时一样无声无息地后退，融入了巷角更深的阴影之中，仿佛从未存在过。
+血族男子脸上露出一抹淡淡的、几乎算不上笑容的弧度。“那么，”他优雅地欠了欠身，动作带着古老贵族般的风范，一串冗长而富有韵律的名字如同诗歌般流淌而出，“我，希尔斯尼拉·凯恩斯特·尼古拉·克洛德·奥尔特·斯拉特·布罗德尼，请求与阁下同行，共同面对难以面对的强敌，共同分享举世瞩目的荣誉。”
+他直起身，猩红的眼眸直视着艾莉西亚的紫瞳，等待着她的回应。小巷中陷入了短暂的寂静，只有远处主街隐约传来的喧闹，映衬着此地的诡异与即将缔结的、跨越种族与偏见的非凡盟约。
+
+`;
+
+        // 获取DOM元素
+        const reader = document.getElementById('reader');
+        const menuButton = document.getElementById('menu-button');
+        const ttsButton = document.getElementById('tts-button');
+        const sidebar = document.getElementById('sidebar');
+        const tocList = document.getElementById('toc-list');
+        const ttsControls = document.getElementById('tts-controls');
+        
+        // TTS相关元素
+        const ttsPlay = document.getElementById('tts-play');
+        const ttsPause = document.getElementById('tts-pause');
+        const ttsStop = document.getElementById('tts-stop');
+        const ttsRate = document.getElementById('tts-rate');
+        const ttsRateValue = document.getElementById('tts-rate-value');
+        const ttsPitch = document.getElementById('tts-pitch');
+        const ttsPitchValue = document.getElementById('tts-pitch-value');
+        const ttsVolume = document.getElementById('tts-volume');
+        const ttsVolumeValue = document.getElementById('tts-volume-value');
+        const ttsVoice = document.getElementById('tts-voice');
+        
+        // 存储阅读位置和字体大小
+        let fontSize = localStorage.getItem('readerFontSize') || 16;
+        let scrollPosition = localStorage.getItem('readerScrollPosition') || 0;
+        
+        // 存储章节信息
+        let chapters = [];
+        
+        // TTS相关变量
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let isPlaying = false;
+        let currentParagraphIndex = 0;
+        let paragraphs = [];
+        let voices = [];
+        
+        // 初始化字体大小
+        reader.style.fontSize = fontSize + 'px';
+        
+        // 双指缩放变量
+        let initialDistance = 0;
+        let initialFontSize = 0;
+        
+        // 加载小说内容
+        function loadNovel() {
+            // 处理文本内容，添加段落格式
+            const formattedText = formatText(novelContent);
+            reader.innerHTML = formattedText;
+            
+            // 获取所有段落
+            paragraphs = Array.from(reader.querySelectorAll('p, .chapter-title'));
+            
+            // 生成目录
+            generateTOC();
+            
+            // 恢复阅读位置
+            setTimeout(() => {
+                window.scrollTo(0, scrollPosition);
+                updateActiveChapter();
+            }, 100);
+            
+            // 初始化TTS
+            initTTS();
+        }
+        
+        // 格式化文本并识别章节
+        function formatText(text) {
+            // 将文本按行分割
+            const lines = text.split('\n');
+            let formatted = '';
+            
+            // 章节识别正则表达式
+            const chapterPattern = /^第[零一二三四五六七八九十百千0-9]+章：.*$/;
+            
+            // 过滤空行并添加段落标签
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.length > 0) {
+                    // 检查是否是章节标题
+                    if (chapterPattern.test(line)) {
+                        // 创建章节信息
+                        const chapterId = `chapter-${chapters.length}`;
+                        chapters.push({
+                            id: chapterId,
+                            title: line,
+                            position: i
+                        });
+                        
+                        // 添加章节标题
+                        formatted += `<h2 id="${chapterId}" class="chapter-title">${line}</h2>`;
+                    } else {
+                        formatted += `<p>${line}</p>`;
+                    }
+                }
+            }
+            
+            return formatted;
+        }
+        
+        // 生成目录
+        function generateTOC() {
+            tocList.innerHTML = '';
+            
+            chapters.forEach((chapter, index) => {
+                const li = document.createElement('li');
+                li.textContent = chapter.title;
+                li.dataset.chapterId = chapter.id;
+                
+                li.addEventListener('click', () => {
+                    // 跳转到对应章节
+                    const chapterElement = document.getElementById(chapter.id);
+                    if (chapterElement) {
+                        chapterElement.scrollIntoView({ behavior: 'smooth' });
+                        // 关闭侧边栏
+                        toggleSidebar();
+                        // 更新活动章节
+                        updateActiveChapter();
+                    }
+                });
+                
+                tocList.appendChild(li);
+            });
+        }
+        
+        // 更新活动章节
+        function updateActiveChapter() {
+            const tocItems = tocList.querySelectorAll('li');
+            const scrollTop = window.scrollY;
+            let activeChapter = null;
+            
+            // 找到当前可见的章节
+            for (let i = chapters.length - 1; i >= 0; i--) {
+                const chapter = chapters[i];
+                const element = document.getElementById(chapter.id);
+                if (element && element.offsetTop <= scrollTop + 100) {
+                    activeChapter = chapter.id;
+                    break;
+                }
+            }
+            
+            // 更新目录中的活动项
+            tocItems.forEach(item => {
+                if (item.dataset.chapterId === activeChapter) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 切换侧边栏显示/隐藏
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('sidebar-open');
+        }
+        
+        // 切换TTS控制面板显示/隐藏
+        function toggleTTSControls() {
+            ttsControls.classList.toggle('active');
+        }
+        
+        // 初始化TTS功能
+        function initTTS() {
+            // 检查浏览器是否支持
+            if (!speechSynthesis) {
+                ttsButton.style.display = 'none';
+                return;
+            }
+            
+            // 加载可用语音
+            loadVoices();
+            
+            // 语音加载事件
+            speechSynthesis.onvoiceschanged = loadVoices;
+            
+            // TTS控制事件
+            ttsPlay.addEventListener('click', playTTS);
+            ttsPause.addEventListener('click', pauseTTS);
+            ttsStop.addEventListener('click', stopTTS);
+            
+            // TTS参数控制
+            ttsRate.addEventListener('input', updateTTSRate);
+            ttsPitch.addEventListener('input', updateTTSPitch);
+            ttsVolume.addEventListener('input', updateTTSVolume);
+            ttsVoice.addEventListener('change', updateTTSVoice);
+            
+            // 初始化显示值
+            updateTTSRate();
+            updateTTSPitch();
+            updateTTSVolume();
+        }
+        
+        // 加载可用语音
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            ttsVoice.innerHTML = '<option value="">默认语音</option>';
+            
+            // 优先显示中文语音
+            const chineseVoices = voices.filter(voice => voice.lang.includes('zh'));
+            const otherVoices = voices.filter(voice => !voice.lang.includes('zh'));
+            
+            chineseVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+            
+            otherVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+        }
+        
+        // 播放TTS
+        function playTTS() {
+            if (isPlaying) {
+                speechSynthesis.resume();
+                return;
+            }
+            
+            // 从当前可见的段落开始
+            const scrollTop = window.scrollY;
+            for (let i = 0; i < paragraphs.length; i++) {
+                if (paragraphs[i].offsetTop >= scrollTop - 50) {
+                    currentParagraphIndex = i;
+                    break;
+                }
+            }
+            
+            speakCurrentParagraph();
+        }
+        
+        // 朗读当前段落
+        function speakCurrentParagraph() {
+            if (currentParagraphIndex >= paragraphs.length) {
+                stopTTS();
+                return;
+            }
+            
+            // 移除之前的高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+            
+            // 高亮当前段落
+            const currentParagraph = paragraphs[currentParagraphIndex];
+            currentParagraph.classList.add('tts-highlight');
+            
+            // 滚动到当前段落
+            currentParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 创建语音合成实例
+            currentUtterance = new SpeechSynthesisUtterance(currentParagraph.textContent);
+            
+            // 设置语音参数
+            currentUtterance.rate = parseFloat(ttsRate.value);
+            currentUtterance.pitch = parseFloat(ttsPitch.value);
+            currentUtterance.volume = parseFloat(ttsVolume.value);
+            
+            // 设置语音
+            if (ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+            
+            // 语音结束事件
+            currentUtterance.onend = function() {
+                currentParagraphIndex++;
+                speakCurrentParagraph();
+            };
+            
+            // 开始朗读
+            speechSynthesis.speak(currentUtterance);
+            isPlaying = true;
+        }
+        
+        // 暂停TTS
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                isPlaying = false;
+            }
+        }
+        
+        // 停止TTS
+        function stopTTS() {
+            speechSynthesis.cancel();
+            isPlaying = false;
+            currentParagraphIndex = 0;
+            
+            // 移除高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+        }
+        
+        // 更新语速
+        function updateTTSRate() {
+            ttsRateValue.textContent = ttsRate.value;
+            if (currentUtterance) {
+                currentUtterance.rate = parseFloat(ttsRate.value);
+            }
+        }
+        
+        // 更新音调
+        function updateTTSPitch() {
+            ttsPitchValue.textContent = ttsPitch.value;
+            if (currentUtterance) {
+                currentUtterance.pitch = parseFloat(ttsPitch.value);
+            }
+        }
+        
+        // 更新音量
+        function updateTTSVolume() {
+            ttsVolumeValue.textContent = ttsVolume.value;
+            if (currentUtterance) {
+                currentUtterance.volume = parseFloat(ttsVolume.value);
+            }
+        }
+        
+        // 更新语音
+        function updateTTSVoice() {
+            if (currentUtterance && ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+        }
+        
+        // 双指缩放功能
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                initialDistance = getDistance(e.touches[0], e.touches[1]);
+                initialFontSize = fontSize;
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const scale = currentDistance / initialDistance;
+                
+                // 计算新的字体大小
+                let newFontSize = initialFontSize * scale;
+                
+                // 限制字体大小范围
+                newFontSize = Math.max(12, Math.min(40, newFontSize));
+                
+                // 应用新的字体大小
+                fontSize = newFontSize;
+                reader.style.fontSize = fontSize + 'px';
+                
+                // 保存字体大小设置
+                localStorage.setItem('readerFontSize', fontSize);
+            }
+        }
+        
+        function getDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // 保存阅读位置
+        function saveScrollPosition() {
+            scrollPosition = window.scrollY;
+            localStorage.setItem('readerScrollPosition', scrollPosition);
+            
+            // 更新活动章节
+            updateActiveChapter();
+        }
+        
+        // 初始化事件监听
+        document.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        
+        // 监听滚动事件保存位置
+        window.addEventListener('scroll', saveScrollPosition);
+        
+        // 菜单按钮点击事件
+        menuButton.addEventListener('click', toggleSidebar);
+        
+        // TTS按钮点击事件
+        ttsButton.addEventListener('click', toggleTTSControls);
+        
+        // 点击侧边栏外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                e.target !== menuButton) {
+                toggleSidebar();
+            }
+            
+            // 点击TTS控制面板外部关闭面板
+            if (ttsControls.classList.contains('active') && 
+                !ttsControls.contains(e.target) && 
+                e.target !== ttsButton) {
+                toggleTTSControls();
+            }
+        });
+        
+        // 页面加载完成后加载小说
+        window.addEventListener('DOMContentLoaded', loadNovel);
+        
+        // 防止页面缩放
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
