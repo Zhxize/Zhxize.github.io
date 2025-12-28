@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>B站视频直链播放</title>
+  <style>
+    video {
+      max-width: 100%;
+      margin-top: 20px;
+      width: 100%;
+      height: auto;
+    }
+    #videoContainer {
+      margin-top: 20px;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+    }
+    /* 默认显示手动输入区域 */
+    #manualInput {
+      display: block;
+    }
+    /* URL参数模式下的样式 */
+    .url-param-mode #manualInput {
+      display: none !important;
+    }
+    .url-param-mode body {
+      padding: 0;
+    }
+    .url-param-mode video {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <!-- 普通解析入口 -->
+  <div id="manualInput">
+    <h2>请输入B站视频链接：</h2>
+    <input type="text" id="biliUrl" placeholder="例如：https://www.bilibili.com/video/BV1xx411c7mu" size="80" />
+    <button onclick="parseAndPlay()">解析并播放</button>
+  </div>
+
+  <div id="videoContainer"></div>
+
+  <script>
+    // 从URL路径或查询字符串中提取BV号
+    function extractBVFromURL() {
+      // 方法1: 从查询字符串中提取（如 ?BV12CBeBvEYo）
+      const queryString = window.location.search.substring(1); // 去掉开头的 ?
+      
+      if (queryString) {
+        // 检查是否是BV开头的字符串
+        const bvMatch = queryString.match(/BV[a-zA-Z0-9]+/);
+        if (bvMatch) {
+          return bvMatch[0];
+        }
+      }
+      
+      // 方法2: 从hash中提取（如 #BV12CBeBvEYo）
+      const hash = window.location.hash.substring(1); // 去掉开头的 #
+      if (hash) {
+        const bvMatch = hash.match(/BV[a-zA-Z0-9]+/);
+        if (bvMatch) {
+          return bvMatch[0];
+        }
+      }
+      
+      return null;
+    }
+
+    // 解析并播放视频
+    function parseAndPlay(bvNumber = null) {
+      let input;
+      
+      if (bvNumber) {
+        // 使用传入的BV号
+        input = `https://www.bilibili.com/video/${bvNumber}`;
+        document.getElementById("biliUrl").value = input;
+      } else {
+        // 使用用户输入的链接
+        input = document.getElementById("biliUrl").value.trim();
+        if (!input) {
+          alert("请输入有效的B站视频链接！");
+          return;
+        }
+      }
+
+      const key = "C4ma9xvRR9bx6xlGy0m";
+      const apiUrl = `https://api.yaohud.cn/api/v6/video/bili?key=${encodeURIComponent(key)}&url=${encodeURIComponent(input)}`;
+
+      fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) throw new Error("接口请求失败");
+          return response.json();
+        })
+        .then(data => {
+          const videoContainer = document.getElementById("videoContainer");
+          videoContainer.innerHTML = ""; // 清空之前的内容
+          
+          if (data.data?.videos?.[0]?.url) {
+            const videoUrl = data.data.videos[0].url;
+            const videoElement = document.createElement("video");
+            videoElement.controls = true;
+            videoElement.autoplay = true;
+            videoElement.innerHTML = `<source src="${videoUrl}" type="video/mp4">你的浏览器不支持 video 标签`;
+            videoContainer.appendChild(videoElement);
+            
+            // 如果是URL参数模式，隐藏手动输入区域
+            if (bvNumber) {
+              document.body.classList.add('url-param-mode');
+            }
+          } else {
+            alert("未能获取视频直链，请检查链接或稍后再试。");
+          }
+        })
+        .catch(error => {
+          console.error("错误:", error);
+          alert("解析失败：" + (error.message || "未知错误"));
+        });
+    }
+
+    // 页面加载时检查URL参数
+    window.onload = function() {
+      const bvNumber = extractBVFromURL();
+      
+      if (bvNumber) {
+        // 标记为URL参数模式
+        document.body.classList.add('url-param-mode');
+        
+        // 延迟执行，确保DOM完全加载
+        setTimeout(() => {
+          parseAndPlay(bvNumber);
+        }, 100);
+      } else {
+        // 不是URL参数模式，保持默认显示
+        document.body.classList.remove('url-param-mode');
+      }
+    }
+  </script>
+</body>
+</html>
