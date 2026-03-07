@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>剑与王国 · 无边像素地图</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0b1a2f;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: rgba(8, 20, 36, 0.85);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a3f5e;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.6);
+            z-index: 20;
+        }
+        .title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 5px #00000050;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        button {
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px black;
+            transition: 0.2s;
+            border: 1px solid #3e6a97;
+        }
+        button:hover { background: #2b4f7c; transform: scale(1.02); }
+        .container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #mapCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            cursor: grab;
+            background: #0a1424;
+            image-rendering: crisp-edges; /* 加强像素感 */
+        }
+        #mapCanvas:active { cursor: grabbing; }
+        .coordinate-display {
+            position: absolute;
+            bottom: 16px; left: 16px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            color: #b3e0ff;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            border: 1px solid #3c6e9c;
+            box-shadow: 0 4px 12px black;
+            z-index: 30;
+        }
+        .zoom-info {
+            position: absolute;
+            top: 70px; right: 16px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: #ddd;
+            padding: 8px 14px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            border: 1px solid #4a5f7a;
+            z-index: 30;
+        }
+        .loading-indicator {
+            position: absolute;
+            top: 70px; left: 16px;
+            background: rgba(0,20,40,0.8);
+            backdrop-filter: blur(4px);
+            color: #8fcbff;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #2d618c;
+            z-index: 30;
+            display: none;
+        }
+        .spinner {
+            width: 16px; height: 16px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tile-grid {
+            position: absolute;
+            bottom: 16px; right: 16px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            color: #aaa;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            border: 1px solid #3d4f66;
+            z-index: 30;
+        }
+        .mobile-coord-overlay {
+            display: none;
+            position: absolute;
+            background: #111c2ad9;
+            color: white;
+            padding: 16px 22px;
+            border-radius: 24px;
+            text-align: center;
+            z-index: 200;
+            font-family: monospace;
+            font-size: 1.5rem;
+            border: 2px solid #6789b3;
+            backdrop-filter: blur(6px);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            white-space: pre;
+        }
+        .pixel-hint {
+            position: absolute;
+            top: 120px; right: 16px;
+            background: #0e1d2eb0;
+            backdrop-filter: blur(4px);
+            color: #b0cde0;
+            padding: 6px 12px;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            border: 1px solid #2b4b6e;
+        }
+        @media (max-width: 700px) {
+            .title { font-size: 1rem; }
+            .controls button { padding: 4px 10px; }
+            .tile-grid, .pixel-hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="title">🗺️ 剑与王国 · 无限图集</div>
+    <div class="controls">
+        <button id="zoomIn">➕ 放大</button>
+        <button id="zoomOut">➖ 缩小</button>
+        <button id="resetView">⟲ 重置</button>
+    </div>
+</div>
+<div class="container">
+    <canvas id="mapCanvas"></canvas>
+    <div class="coordinate-display" id="coordinateDisplay">X: -10240, Z: -10240</div>
+    <div class="zoom-info" id="zoomInfo">缩放: 100%</div>
+    <div class="loading-indicator" id="loadingIndicator"><span class="spinner"></span><span>加载图块...</span></div>
+    <div class="tile-grid" id="tileGrid">图块范围: (0,0)-(0,0)</div>
+    <div class="pixel-hint" id="pixelHint">🔍 极细缩放已启用 (最小0.001%)</div>
+    <div class="mobile-coord-overlay" id="mobileCoordOverlay"></div>
+</div>
+
+<script>
+(function(){
+    // ==================== 配置 (完全适配新图集) ====================
+    const CONFIG = {
+        TILE_SIZE: 1024,                // 每个图块1024像素
+        GRID_SIZE: 200,                  // 虚拟网格足够大(实际根据文件名动态,但用大网格避免越界)
+        MIN_ZOOM: 0.00001,               // 0.001% 极微缩放
+        MAX_ZOOM: 24.0,                   // 放大到2400%
+        INITIAL_ZOOM: 0.8,                // 初始80%
+        ORIGIN_X: -10240,                  // 左上角世界X (根据文件名推测最小x)
+        ORIGIN_Z: -10240,                  // 左上角世界Z
+        TILE_DIR: 'tiles',                 // 图块目录 (请将图片放在tiles文件夹)
+        PRELOAD_RADIUS: 1,                  // 预加载相邻一圈
+    };
+
+    // ==================== 状态 ====================
+    const mapState = {
+        offsetX: 0, offsetY: 0,
+        scale: CONFIG.INITIAL_ZOOM,
+        isDragging: false,
+        lastX: 0, lastY: 0,
+        visibleTiles: new Set(),
+        tileCache: new Map(),           // key "x,z" -> Image or Canvas
+        loadingTiles: new Set(),
+        isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+        lastRenderTime: 0,
+    };
+
+    // DOM
+    const el = {
+        canvas: document.getElementById('mapCanvas'),
+        ctx: null,
+        coord: document.getElementById('coordinateDisplay'),
+        zoomInfo: document.getElementById('zoomInfo'),
+        loading: document.getElementById('loadingIndicator'),
+        tileGrid: document.getElementById('tileGrid'),
+        mobileOverlay: document.getElementById('mobileCoordOverlay'),
+        zoomIn: document.getElementById('zoomIn'),
+        zoomOut: document.getElementById('zoomOut'),
+        reset: document.getElementById('resetView'),
+    };
+
+    // ==================== 工具函数 ====================
+    function getTileFilename(tileX, tileZ) {
+        // 根据命名规则: tileX_tileZ_x{worldX}_z{worldZ}.png
+        const worldX = CONFIG.ORIGIN_X + tileX * CONFIG.TILE_SIZE;
+        const worldZ = CONFIG.ORIGIN_Z + tileZ * CONFIG.TILE_SIZE;
+        return `${CONFIG.TILE_DIR}/${tileX}_${tileZ}_x${worldX}_z${worldZ}.png`;
+    }
+
+    // 世界坐标 → 图块索引 (基于原点)
+    function worldToTileIndex(wx, wz) {
+        const tileX = Math.floor((wx - CONFIG.ORIGIN_X) / CONFIG.TILE_SIZE);
+        const tileZ = Math.floor((wz - CONFIG.ORIGIN_Z) / CONFIG.TILE_SIZE);
+        return { x: tileX, z: tileZ };
+    }
+
+    // 画布坐标 → 世界坐标
+    function canvasToWorld(cx, cy) {
+        const worldX = CONFIG.ORIGIN_X + (cx - mapState.offsetX) / mapState.scale;
+        const worldZ = CONFIG.ORIGIN_Z + (cy - mapState.offsetY) / mapState.scale;
+        return { x: Math.floor(worldX), z: Math.floor(worldZ) };
+    }
+
+    // 加载单块图块
+    function loadTile(tileX, tileZ) {
+        const key = `${tileX},${tileZ}`;
+        if (mapState.tileCache.has(key) || mapState.loadingTiles.has(key)) return;
+        // 限制网格范围 (防止无限请求不存在的地方，根据文件名推测范围在0~200足够)
+        if (tileX < -50 || tileX > 150 || tileZ < -50 || tileZ > 150) return; // 放宽边界,实际根据文件列表动态
+
+        mapState.loadingTiles.add(key);
+        el.loading.style.display = 'flex';
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // 避免跨域问题（如果同目录则无影响）
+        img.src = getTileFilename(tileX, tileZ);
+
+        img.onload = () => {
+            mapState.tileCache.set(key, img);
+            mapState.loadingTiles.delete(key);
+            if (mapState.loadingTiles.size === 0) el.loading.style.display = 'none';
+            requestRender();
+        };
+
+        img.onerror = () => {
+            // 生成占位图 (半透明网格，方便识别缺失)
+            const canvas = document.createElement('canvas');
+            canvas.width = CONFIG.TILE_SIZE;
+            canvas.height = CONFIG.TILE_SIZE;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1a2635';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#ff444460';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, canvas.width-4, canvas.height-4);
+            ctx.font = 'bold 40px monospace';
+            ctx.fillStyle = '#ff888880';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⛔', canvas.width/2, canvas.height/2-20);
+            ctx.font = '24px monospace';
+            ctx.fillStyle = '#aaa';
+            ctx.fillText(`${tileX},${tileZ}`, canvas.width/2, canvas.height/2+30);
+
+            mapState.tileCache.set(key, canvas);
+            mapState.loadingTiles.delete(key);
+            if (mapState.loadingTiles.size === 0) el.loading.style.display = 'none';
+            requestRender();
+        };
+    }
+
+    // 计算可见图块 (并预加载)
+    function updateVisibleTiles() {
+        const canvas = el.canvas;
+        if (!canvas) return;
+
+        const topLeft = canvasToWorld(0, 0);
+        const bottomRight = canvasToWorld(canvas.width, canvas.height);
+
+        const t1 = worldToTileIndex(topLeft.x, topLeft.z);
+        const t2 = worldToTileIndex(bottomRight.x, bottomRight.z);
+
+        el.tileGrid.textContent = `图块范围: (${t1.x},${t1.z}) ~ (${t2.x},${t2.z})`;
+
+        const startX = Math.min(t1.x, t2.x) - CONFIG.PRELOAD_RADIUS;
+        const endX   = Math.max(t1.x, t2.x) + CONFIG.PRELOAD_RADIUS;
+        const startZ = Math.min(t1.z, t2.z) - CONFIG.PRELOAD_RADIUS;
+        const endZ   = Math.max(t1.z, t2.z) + CONFIG.PRELOAD_RADIUS;
+
+        const visibleSet = new Set();
+        for (let z = startZ; z <= endZ; z++) {
+            for (let x = startX; x <= endX; x++) {
+                const key = `${x},${z}`;
+                visibleSet.add(key);
+                if (!mapState.tileCache.has(key) && !mapState.loadingTiles.has(key)) {
+                    loadTile(x, z);
+                }
+            }
+        }
+        mapState.visibleTiles = visibleSet;
+    }
+
+    // 渲染 (强制像素风格)
+    function render() {
+        const now = performance.now();
+        if (now - mapState.lastRenderTime < 16) return; // 60fps throttle
+        mapState.lastRenderTime = now;
+
+        const ctx = el.ctx;
+        const canvas = el.canvas;
+        if (!ctx) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(mapState.offsetX, mapState.offsetY);
+        ctx.scale(mapState.scale, mapState.scale);
+
+        // 禁用所有平滑 —— 关键：像素完美
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+
+        // 更新可见集 (同时触发加载)
+        updateVisibleTiles();
+
+        // 绘制所有缓存中且可见的图块
+        mapState.visibleTiles.forEach(key => {
+            const img = mapState.tileCache.get(key);
+            if (!img) return;
+            const [x, z] = key.split(',').map(Number);
+            const screenX = x * CONFIG.TILE_SIZE;
+            const screenZ = z * CONFIG.TILE_SIZE;
+            ctx.drawImage(img, screenX, screenZ, CONFIG.TILE_SIZE, CONFIG.TILE_SIZE);
+        });
+
+        ctx.restore();
+
+        // 更新缩放显示
+        el.zoomInfo.textContent = `缩放: ${(mapState.scale * 100).toFixed(3)}%`;
+    }
+
+    // 节选渲染请求
+    let renderScheduled = false;
+    function requestRender() {
+        if (!renderScheduled) {
+            renderScheduled = true;
+            requestAnimationFrame(() => {
+                render();
+                renderScheduled = false;
+            });
+        }
+    }
+
+    // ==================== 视图操作 ====================
+    function resizeCanvas() {
+        const container = el.canvas.parentElement;
+        el.canvas.width = container.clientWidth;
+        el.canvas.height = container.clientHeight;
+        centerView();
+        requestRender();
+    }
+
+    function centerView() {
+        const canvas = el.canvas;
+        const totalSize = CONFIG.TILE_SIZE * 20; // 显示大约20图块范围，美观
+        mapState.offsetX = (canvas.width - totalSize * mapState.scale) / 2;
+        mapState.offsetY = (canvas.height - totalSize * mapState.scale) / 2;
+    }
+
+    function resetView() {
+        mapState.scale = CONFIG.INITIAL_ZOOM;
+        centerView();
+        requestRender();
+    }
+
+    function zoomAt(factor, centerX, centerY) {
+        const prevScale = mapState.scale;
+        let newScale = mapState.scale * factor;
+        newScale = Math.max(CONFIG.MIN_ZOOM, Math.min(newScale, CONFIG.MAX_ZOOM));
+        mapState.scale = newScale;
+
+        // 保持中心点不动
+        mapState.offsetX = centerX - (centerX - mapState.offsetX) * (newScale / prevScale);
+        mapState.offsetY = centerY - (centerY - mapState.offsetY) * (newScale / prevScale);
+        requestRender();
+    }
+
+    // ==================== 事件 ====================
+    function initEvents() {
+        const canvas = el.canvas;
+
+        // 鼠标/触摸拖动
+        canvas.addEventListener('mousedown', (e) => {
+            mapState.isDragging = true;
+            mapState.lastX = e.clientX;
+            mapState.lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!mapState.isDragging) return;
+            const dx = e.clientX - mapState.lastX;
+            const dy = e.clientY - mapState.lastY;
+            mapState.offsetX += dx;
+            mapState.offsetY += dy;
+            mapState.lastX = e.clientX;
+            mapState.lastY = e.clientY;
+            requestRender();
+        });
+        window.addEventListener('mouseup', () => {
+            mapState.isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        // 滚轮缩放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            const factor = e.deltaY < 0 ? 1.2 : 0.83333;  // 1/1.2 ≈0.833
+            zoomAt(factor, mx, my);
+        }, { passive: false });
+
+        // 触摸
+        let touchDistance = 0, touchScaleStart = 1, touchCenter = { x: 0, y: 0 };
+        let touchStartOffset = { x: 0, y: 0 };
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                mapState.lastX = e.touches[0].clientX;
+                mapState.lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchDistance = Math.hypot(dx, dy);
+                touchScaleStart = mapState.scale;
+                touchCenter.x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                touchCenter.y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                touchStartOffset.x = mapState.offsetX;
+                touchStartOffset.y = mapState.offsetY;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                const dx = e.touches[0].clientX - mapState.lastX;
+                const dy = e.touches[0].clientY - mapState.lastY;
+                mapState.offsetX += dx;
+                mapState.offsetY += dy;
+                mapState.lastX = e.touches[0].clientX;
+                mapState.lastY = e.touches[0].clientY;
+                requestRender();
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const newDist = Math.hypot(dx, dy);
+                if (touchDistance > 0) {
+                    const factor = newDist / touchDistance;
+                    let newScale = touchScaleStart * factor;
+                    newScale = Math.max(CONFIG.MIN_ZOOM, Math.min(newScale, CONFIG.MAX_ZOOM));
+                    mapState.scale = newScale;
+
+                    const rect = canvas.getBoundingClientRect();
+                    const cx = touchCenter.x - rect.left;
+                    const cy = touchCenter.y - rect.top;
+                    mapState.offsetX = cx - (cx - touchStartOffset.x) * (newScale / touchScaleStart);
+                    mapState.offsetY = cy - (cy - touchStartOffset.y) * (newScale / touchScaleStart);
+                    requestRender();
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) touchDistance = 0;
+        });
+
+        // 移动端点击显示坐标
+        canvas.addEventListener('click', (e) => {
+            if (!mapState.isMobile) return;
+            const rect = canvas.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const world = canvasToWorld(cx, cy);
+            const ov = el.mobileOverlay;
+            ov.textContent = `X: ${world.x}\nZ: ${world.z}`;
+            ov.style.display = 'block';
+            ov.style.left = e.clientX + 'px';
+            ov.style.top = e.clientY + 'px';
+            setTimeout(() => ov.style.display = 'none', 2000);
+        });
+
+        // 鼠标移动显示坐标
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const world = canvasToWorld(cx, cy);
+            el.coord.textContent = `X: ${world.x}  Z: ${world.z}`;
+        });
+
+        // 按钮
+        el.zoomIn.addEventListener('click', () => {
+            zoomAt(1.5, el.canvas.width/2, el.canvas.height/2);
+        });
+        el.zoomOut.addEventListener('click', () => {
+            zoomAt(0.6667, el.canvas.width/2, el.canvas.height/2);
+        });
+        el.reset.addEventListener('click', resetView);
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            requestRender();
+        });
+    }
+
+    // ==================== 初始化 ====================
+    function init() {
+        el.ctx = el.canvas.getContext('2d', { willReadFrequently: false, alpha: false });
+        // 彻底禁用平滑
+        const ctx = el.ctx;
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+
+        resizeCanvas();
+        initEvents();
+
+        // 预加载中心几个图块，让地图立刻有内容
+        for (let dz = -1; dz <= 1; dz++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                loadTile(8+dx, 8+dz);  // 8,8 附近是常见初始区域，根据您文件名0_29293等推断大约在这个范围
+            }
+        }
+
+        function animate() {
+            render();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    window.addEventListener('load', init);
+})();
+</script>
+</body>
+</html>
