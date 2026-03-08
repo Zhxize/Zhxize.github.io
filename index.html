@@ -1,16 +1,259 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小说阅读器</title>
     <style>
-        body {
-            background: white;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #F2E8C1;
+            color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: filter 0.3s ease;
+        }
+        
+        /* 菜单按钮 */
+        #menu-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* TTS控制按钮 */
+        #tts-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #F2E8C1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 侧边栏 */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background-color: #F2E8C1;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            padding: 60px 15px 20px;
+        }
+        
+        #sidebar.active {
+            left: 0;
+        }
+        
+        #sidebar h2 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        #toc-list {
+            list-style: none;
+        }
+        
+        #toc-list li {
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        #toc-list li:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        #toc-list li.active {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        /* TTS控制面板 */
+        #tts-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #F2E8C1;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #tts-controls.active {
+            display: block;
+        }
+        
+        .tts-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tts-label {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .tts-control {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 专门针对语音选择框，使其与滑块等宽 */
+        select.tts-control {
+            flex: 1;
+            display: block;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #F2E8C1;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        select.tts-control option {
+            background-color: #333;
+            color: #F2E8C1;
+        }
+        
+        .tts-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #F2E8C1;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        
+        .tts-button.active {
+            background-color: #4CAF50;
+        }
+        
+        .tts-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+        
+        .tts-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #F2E8C1;
+            cursor: pointer;
+        }
+        
+        /* 阅读器主体 */
+        #reader {
+            max-width: 100%;
+            margin: 0 auto;
+            transition: font-size 0.2s ease;
+            word-wrap: break-word;
+            text-align: justify;
+            -webkit-text-size-adjust: none;
+        }
+        
+        /* 章节标题样式 */
+        .chapter-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 高亮当前朗读的段落 */
+        .tts-highlight {
+            background-color: rgba(255, 215, 0, 0.3);
+            transition: background-color 0.3s ease;
+        }
+        
+        /* 加载提示 */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #c00;
+        }
+        
+        /* 磁贴菜单样式 */
+        .tile-menu {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
+        
         .tile {
             background: white;
             border: 1px solid #ccc;
@@ -20,23 +263,612 @@
             text-align: center;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 8px;
+            flex: 1 1 auto;
+        }
+        
+        .tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        /* 响应式调整 */
+        @media (min-width: 768px) {
+            #reader {
+                max-width: 700px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 菜单按钮 -->
+    <div id="menu-button">☰</div>
+    
+    <!-- TTS按钮 -->
+    <div id="tts-button">🔊</div>
+    
+    <!-- 目录侧边栏 -->
+    <div id="sidebar">
+        <h2>目录</h2>
+        <ul id="toc-list"></ul>
+    </div>
+    
+    <!-- TTS控制面板 -->
+    <div id="tts-controls">
+        <div class="tts-row">
+            <span class="tts-label">语音控制</span>
+            <div class="tts-control">
+                <button id="tts-play" class="tts-button">▶</button>
+                <button id="tts-pause" class="tts-button">⏸</button>
+                <button id="tts-stop" class="tts-button">⏹</button>
+            </div>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语速</span>
+            <input type="range" id="tts-rate" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-rate-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音调</span>
+            <input type="range" id="tts-pitch" class="tts-slider" min="0.5" max="2" step="0.1" value="1">
+            <span id="tts-pitch-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">音量</span>
+            <input type="range" id="tts-volume" class="tts-slider" min="0" max="1" step="0.1" value="1">
+            <span id="tts-volume-value" class="tts-label">1.0</span>
+        </div>
+        <div class="tts-row">
+            <span class="tts-label">语音</span>
+            <select id="tts-voice" class="tts-control">
+                <option value="">默认语音</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- 阅读器内容 - 初始隐藏 -->
+    <div id="reader" style="display: none;"></div>
+    
+    <!-- 磁贴菜单容器 -->
+    <div id="tile-menu" class="tile-menu"></div>
+
     <script>
+        // 获取DOM元素
+        const reader = document.getElementById('reader');
+        const menuButton = document.getElementById('menu-button');
+        const ttsButton = document.getElementById('tts-button');
+        const sidebar = document.getElementById('sidebar');
+        const tocList = document.getElementById('toc-list');
+        const ttsControls = document.getElementById('tts-controls');
+        const tileMenu = document.getElementById('tile-menu');
+        
+        // TTS相关元素
+        const ttsPlay = document.getElementById('tts-play');
+        const ttsPause = document.getElementById('tts-pause');
+        const ttsStop = document.getElementById('tts-stop');
+        const ttsRate = document.getElementById('tts-rate');
+        const ttsRateValue = document.getElementById('tts-rate-value');
+        const ttsPitch = document.getElementById('tts-pitch');
+        const ttsPitchValue = document.getElementById('tts-pitch-value');
+        const ttsVolume = document.getElementById('tts-volume');
+        const ttsVolumeValue = document.getElementById('tts-volume-value');
+        const ttsVoice = document.getElementById('tts-voice');
+        
+        // 存储阅读位置和字体大小
+        let fontSize = localStorage.getItem('readerFontSize') || 16;
+        let scrollPosition = localStorage.getItem('readerScrollPosition') || 0;
+        
+        // 存储章节信息
+        let chapters = [];
+        
+        // TTS相关变量
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let isPlaying = false;
+        let currentParagraphIndex = 0;
+        let paragraphs = [];
+        let voices = [];
+        
+        // 初始化字体大小
+        reader.style.fontSize = fontSize + 'px';
+        
+        // 双指缩放变量
+        let initialDistance = 0;
+        let initialFontSize = 0;
+        
+        // 磁贴菜单数据 - 路径中不包含.txt后缀
         const tiles = [
-            { text: "诸神学校", link: "/%E8%AF%B8%E7%A5%9E%E5%AD%A6%E6%A0%A1.HTML" },
-            { text: "猎魔人", link: "/%E7%8C%8E%E9%AD%94%E4%BA%BA/%E7%8C%8E%E9%AD%94%E4%BA%BA.html" },
-            { text: "重生·罪恶与麻木的废土", link: "重生·罪恶与麻木的废土.HTML" }
+            { text: "诸神学校", path: "诸神学校" },
+            { text: "猎魔人", path: "猎魔人" },
+            { text: "重生·罪恶与麻木的废土", path: "重生·罪恶与麻木的废土" },
+            { text: "红楼·新编", path: "红楼·新编" }
+
         ];
         
-        tiles.forEach(tile => {
-            const element = document.createElement('div');
-            element.className = 'tile';
-            element.textContent = tile.text;
-            element.onclick = () => location.href = tile.link;
-            document.body.appendChild(element);
+        // 获取当前页面的基础路径（去除文件名部分）
+        function getBasePath() {
+            const path = window.location.pathname;
+            const lastSlash = path.lastIndexOf('/');
+            if (lastSlash === -1) return '';
+            return path.substring(0, lastSlash + 1);
+        }
+        
+        // 获取URL参数中的文件名（不包含.txt）
+        function getFileNameFromURL() {
+            const search = window.location.search.substring(1); // 去掉?
+            if (!search) return null;
+            
+            // 尝试解析为key=value格式
+            const params = new URLSearchParams(search);
+            let file = params.get('file'); // 支持 ?file=xxx
+            if (file) return file;
+            
+            // 如果没有file参数，且search不包含等号，则整个search就是文件名
+            if (!search.includes('=')) {
+                return search;
+            }
+            
+            return null;
+        }
+        
+        // 显示磁贴菜单
+        function showTileMenu() {
+            reader.style.display = 'none';
+            tileMenu.style.display = 'flex';
+            tileMenu.innerHTML = ''; // 清空并重新生成
+            
+            tiles.forEach(tile => {
+                const element = document.createElement('div');
+                element.className = 'tile';
+                element.textContent = tile.text;
+                element.onclick = () => {
+                    // 跳转到当前页面，加上文件路径作为参数（不包含.txt）
+                    // 对路径进行编码处理，确保中文正确
+                    const encodedPath = encodeURIComponent(tile.path);
+                    window.location.href = window.location.pathname + '?' + encodedPath;
+                };
+                tileMenu.appendChild(element);
+            });
+        }
+        
+        // 隐藏磁贴菜单，显示阅读器
+        function hideTileMenu() {
+            reader.style.display = 'block';
+            tileMenu.style.display = 'none';
+        }
+        
+        // 加载小说内容
+        async function loadNovel() {
+            const filePath = getFileNameFromURL();
+            
+            if (!filePath) {
+                // 没有文件名参数，显示磁贴菜单
+                showTileMenu();
+                return;
+            }
+            
+            // 有文件名参数，隐藏磁贴菜单，显示阅读器
+            hideTileMenu();
+            
+            // 设置网页标题为解码后的文件名（提取最后一部分作为标题）
+            try {
+                const decodedPath = decodeURIComponent(filePath);
+                // 提取路径中的文件名部分（最后一个/之后的内容）
+                const lastSlash = decodedPath.lastIndexOf('/');
+                const title = lastSlash === -1 ? decodedPath : decodedPath.substring(lastSlash + 1);
+                document.title = title;
+            } catch (e) {
+                document.title = filePath; // 如果解码失败，回退到原始字符串
+            }
+            
+            // 显示加载中
+            reader.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                // 构建完整的文件URL：路径 + .txt
+                // filePath 可能包含目录结构，例如 "/小说/重生·罪恶与麻木的废土"
+                // 需要确保路径正确拼接
+                let fileUrl = filePath;
+                
+                // 如果filePath不以/开头，且不是绝对路径，可能需要添加基础路径
+                // 这里保持原样，因为路径可能已经是相对于服务器根目录的
+                
+                // 添加.txt后缀
+                if (!fileUrl.endsWith('.txt')) {
+                    fileUrl = fileUrl + '.txt';
+                }
+                
+                // 使用原始编码的文件名发起请求（浏览器会自动处理编码）
+                const response = await fetch(fileUrl);
+                if (!response.ok) {
+                    throw new Error(`无法加载文件: ${response.status} ${response.statusText}`);
+                }
+                const text = await response.text();
+                
+                // 处理文本内容，添加段落格式
+                const formattedText = formatText(text);
+                reader.innerHTML = formattedText;
+                
+                // 获取所有段落
+                paragraphs = Array.from(reader.querySelectorAll('p, .chapter-title'));
+                
+                // 生成目录
+                generateTOC();
+                
+                // 恢复阅读位置
+                setTimeout(() => {
+                    window.scrollTo(0, scrollPosition);
+                    updateActiveChapter();
+                }, 100);
+                
+                // 初始化TTS
+                initTTS();
+                
+            } catch (error) {
+                reader.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 格式化文本并识别章节
+        function formatText(text) {
+            // 将文本按行分割
+            const lines = text.split('\n');
+            let formatted = '';
+            
+            // 章节识别正则表达式 - 请根据实际章节标题格式修改
+            // 示例：匹配 "第X章" 或 "Chapter X" 等
+            const chapterPattern = /^(第[一二三四五六七八九十0-9]+[章回集])|(Chapter\s+\d+)/i;
+            
+            // 重置章节列表
+            chapters = [];
+            
+            // 过滤空行并添加段落标签
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.length > 0) {
+                    // 检查是否是章节标题
+                    if (chapterPattern.test(line)) {
+                        // 创建章节信息
+                        const chapterId = `chapter-${chapters.length}`;
+                        chapters.push({
+                            id: chapterId,
+                            title: line,
+                            position: i
+                        });
+                        
+                        // 添加章节标题
+                        formatted += `<h2 id="${chapterId}" class="chapter-title">${line}</h2>`;
+                    } else {
+                        formatted += `<p>${line}</p>`;
+                    }
+                }
+            }
+            
+            return formatted;
+        }
+        
+        // 生成目录
+        function generateTOC() {
+            tocList.innerHTML = '';
+            
+            chapters.forEach((chapter) => {
+                const li = document.createElement('li');
+                li.textContent = chapter.title;
+                li.dataset.chapterId = chapter.id;
+                
+                li.addEventListener('click', () => {
+                    // 跳转到对应章节
+                    const chapterElement = document.getElementById(chapter.id);
+                    if (chapterElement) {
+                        chapterElement.scrollIntoView({ behavior: 'smooth' });
+                        // 关闭侧边栏
+                        toggleSidebar();
+                        // 更新活动章节
+                        updateActiveChapter();
+                    }
+                });
+                
+                tocList.appendChild(li);
+            });
+        }
+        
+        // 更新活动章节
+        function updateActiveChapter() {
+            const tocItems = tocList.querySelectorAll('li');
+            const scrollTop = window.scrollY;
+            let activeChapter = null;
+            
+            // 找到当前可见的章节
+            for (let i = chapters.length - 1; i >= 0; i--) {
+                const chapter = chapters[i];
+                const element = document.getElementById(chapter.id);
+                if (element && element.offsetTop <= scrollTop + 100) {
+                    activeChapter = chapter.id;
+                    break;
+                }
+            }
+            
+            // 更新目录中的活动项
+            tocItems.forEach(item => {
+                if (item.dataset.chapterId === activeChapter) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 切换侧边栏显示/隐藏
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+        }
+        
+        // 切换TTS控制面板显示/隐藏
+        function toggleTTSControls() {
+            ttsControls.classList.toggle('active');
+        }
+        
+        // 初始化TTS功能
+        function initTTS() {
+            // 检查浏览器是否支持
+            if (!speechSynthesis) {
+                ttsButton.style.display = 'none';
+                return;
+            }
+            
+            // 加载可用语音
+            loadVoices();
+            
+            // 语音加载事件
+            speechSynthesis.onvoiceschanged = loadVoices;
+            
+            // TTS控制事件
+            ttsPlay.addEventListener('click', playTTS);
+            ttsPause.addEventListener('click', pauseTTS);
+            ttsStop.addEventListener('click', stopTTS);
+            
+            // TTS参数控制
+            ttsRate.addEventListener('input', updateTTSRate);
+            ttsPitch.addEventListener('input', updateTTSPitch);
+            ttsVolume.addEventListener('input', updateTTSVolume);
+            ttsVoice.addEventListener('change', updateTTSVoice);
+            
+            // 初始化显示值
+            updateTTSRate();
+            updateTTSPitch();
+            updateTTSVolume();
+        }
+        
+        // 加载可用语音
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            ttsVoice.innerHTML = '<option value="">默认语音</option>';
+            
+            // 优先显示中文语音
+            const chineseVoices = voices.filter(voice => voice.lang.includes('zh'));
+            const otherVoices = voices.filter(voice => !voice.lang.includes('zh'));
+            
+            chineseVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+            
+            otherVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                ttsVoice.appendChild(option);
+            });
+        }
+        
+        // 播放TTS
+        function playTTS() {
+            if (!paragraphs.length) return;
+            
+            if (isPlaying) {
+                speechSynthesis.resume();
+                return;
+            }
+            
+            // 从当前可见的段落开始
+            const scrollTop = window.scrollY;
+            for (let i = 0; i < paragraphs.length; i++) {
+                if (paragraphs[i].offsetTop >= scrollTop - 50) {
+                    currentParagraphIndex = i;
+                    break;
+                }
+            }
+            
+            speakCurrentParagraph();
+        }
+        
+        // 朗读当前段落
+        function speakCurrentParagraph() {
+            if (currentParagraphIndex >= paragraphs.length) {
+                stopTTS();
+                return;
+            }
+            
+            // 移除之前的高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+            
+            // 高亮当前段落
+            const currentParagraph = paragraphs[currentParagraphIndex];
+            currentParagraph.classList.add('tts-highlight');
+            
+            // 滚动到当前段落
+            currentParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 创建语音合成实例
+            currentUtterance = new SpeechSynthesisUtterance(currentParagraph.textContent);
+            
+            // 设置语音参数
+            currentUtterance.rate = parseFloat(ttsRate.value);
+            currentUtterance.pitch = parseFloat(ttsPitch.value);
+            currentUtterance.volume = parseFloat(ttsVolume.value);
+            
+            // 设置语音
+            if (ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+            
+            // 语音结束事件
+            currentUtterance.onend = function() {
+                currentParagraphIndex++;
+                speakCurrentParagraph();
+            };
+            
+            // 开始朗读
+            speechSynthesis.speak(currentUtterance);
+            isPlaying = true;
+        }
+        
+        // 暂停TTS
+        function pauseTTS() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                isPlaying = false;
+            }
+        }
+        
+        // 停止TTS
+        function stopTTS() {
+            speechSynthesis.cancel();
+            isPlaying = false;
+            currentParagraphIndex = 0;
+            
+            // 移除高亮
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+        }
+        
+        // 更新语速
+        function updateTTSRate() {
+            ttsRateValue.textContent = ttsRate.value;
+            if (currentUtterance) {
+                currentUtterance.rate = parseFloat(ttsRate.value);
+            }
+        }
+        
+        // 更新音调
+        function updateTTSPitch() {
+            ttsPitchValue.textContent = ttsPitch.value;
+            if (currentUtterance) {
+                currentUtterance.pitch = parseFloat(ttsPitch.value);
+            }
+        }
+        
+        // 更新音量
+        function updateTTSVolume() {
+            ttsVolumeValue.textContent = ttsVolume.value;
+            if (currentUtterance) {
+                currentUtterance.volume = parseFloat(ttsVolume.value);
+            }
+        }
+        
+        // 更新语音
+        function updateTTSVoice() {
+            if (currentUtterance && ttsVoice.value) {
+                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+        }
+        
+        // 双指缩放功能
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                initialDistance = getDistance(e.touches[0], e.touches[1]);
+                initialFontSize = fontSize;
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const scale = currentDistance / initialDistance;
+                
+                // 计算新的字体大小
+                let newFontSize = initialFontSize * scale;
+                
+                // 限制字体大小范围
+                newFontSize = Math.max(12, Math.min(40, newFontSize));
+                
+                // 应用新的字体大小
+                fontSize = newFontSize;
+                reader.style.fontSize = fontSize + 'px';
+                
+                // 保存字体大小设置
+                localStorage.setItem('readerFontSize', fontSize);
+            }
+        }
+        
+        function getDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // 保存阅读位置
+        function saveScrollPosition() {
+            scrollPosition = window.scrollY;
+            localStorage.setItem('readerScrollPosition', scrollPosition);
+            
+            // 更新活动章节
+            updateActiveChapter();
+        }
+        
+        // 初始化事件监听
+        document.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        
+        // 监听滚动事件保存位置
+        window.addEventListener('scroll', saveScrollPosition);
+        
+        // 菜单按钮点击事件
+        menuButton.addEventListener('click', toggleSidebar);
+        
+        // TTS按钮点击事件
+        ttsButton.addEventListener('click', toggleTTSControls);
+        
+        // 点击侧边栏外部关闭侧边栏
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                e.target !== menuButton) {
+                toggleSidebar();
+            }
+            
+            // 点击TTS控制面板外部关闭面板
+            if (ttsControls.classList.contains('active') && 
+                !ttsControls.contains(e.target) && 
+                e.target !== ttsButton) {
+                toggleTTSControls();
+            }
+        });
+        
+        // 页面加载完成后加载小说
+        window.addEventListener('DOMContentLoaded', loadNovel);
+        
+        // 防止页面缩放
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
         });
     </script>
 </body>
