@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>大爷猎奇录 · 大型音像参问资料馆</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 强制全屏无滚动 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #2b2b26;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', '宋体', 'SimSun', 'Palatino', Georgia, serif;
+            background: #1f1e1b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        /* 主容器 — 沉稳古旧风格 */
+        .archive-container {
+            width: 100%;
+            height: 100%;
+            max-width: 1400px;
+            background: #1f1e1b;
+            background-image: radial-gradient(circle at 25% 40%, rgba(80, 70, 55, 0.2) 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+            border: 1px solid #5e5a4c;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 240, 0.03);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: containerFadeIn 0.9s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        @keyframes containerFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0px);
+            }
+        }
+
+        /* 页眉区域 — 标题行 + 按钮靠右 */
+        .archive-header {
+            flex-shrink: 0;
+            padding: 1.2rem 2rem 0.9rem 2rem;
+            border-bottom: 2px solid #8b7a5b;
+            background: #26241f;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .archive-header:before {
+            content: "⦿";
+            font-size: 1.5rem;
+            color: #b39b6b;
+            position: absolute;
+            bottom: -10px;
+            left: 2rem;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .title-wrapper {
+            flex-shrink: 0;
+        }
+
+        .site-title {
+            font-size: clamp(1.5rem, 6vw, 2.3rem);
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #e0cfaa;
+            text-shadow: 2px 2px 0 #2a241a;
+            margin-bottom: 0;
+            animation: titleBreathing 3s infinite alternate ease-in-out;
+        }
+
+        @keyframes titleBreathing {
+            0% {
+                letter-spacing: 4px;
+                text-shadow: 2px 2px 0 #2a241a;
+            }
+            100% {
+                letter-spacing: 5px;
+                text-shadow: 2px 2px 3px #1f1b13;
+            }
+        }
+
+        /* 按钮样式 — 与主页面风格统一 */
+        .header-btn {
+            flex-shrink: 0;
+        }
+
+        .av-button {
+            background: #2a2a24;
+            border: 1px solid #8b7a5b;
+            color: #e0cfaa;
+            font-family: 'Noto Serif SC', system-ui, serif;
+            font-size: 0.9rem;
+            padding: 0.5rem 1.5rem;
+            cursor: pointer;
+            border-radius: 48px;
+            letter-spacing: 2px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .av-button:hover {
+            background: #3a3528;
+            border-color: #b39b6b;
+            color: #f5eace;
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        /* 核心长文区域 */
+        .testament-section {
+            flex: 1;
+            min-height: 0;
+            background: #1c1b17;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.5rem;
+            overflow: hidden;
+        }
+
+        .chronicle {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 猎奇录长文容器 — 沉稳色调 */
+        .hunter-records {
+            background: #24221c;
+            border-left: 6px solid #8f7a53;
+            border-radius: 4px;
+            box-shadow: inset 0 0 0 1px #3c372c, 0 8px 18px rgba(0,0,0,0.4);
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            color: #ece4cf;
+            font-family: 'Noto Serif SC', 'Courier New', '宋体', monospace;
+            width: 100%;
+            padding: 1rem 1.6rem;
+            font-size: clamp(0.72rem, 2.2vh, 0.98rem);
+            line-height: 1.6;
+            overflow-y: auto;
+            overflow-x: auto;
+            max-height: 100%;
+            scrollbar-width: thin;
+            transition: all 0.3s ease;
+            animation: textGlow 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes textGlow {
+            0% {
+                opacity: 0.85;
+                text-shadow: 0 0 0px rgba(230, 210, 150, 0);
+                border-left-color: #5e4f34;
+            }
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 2px rgba(200, 180, 120, 0.15);
+                border-left-color: #8f7a53;
+            }
+        }
+
+        .hunter-records::-webkit-scrollbar {
+            width: 4px;
+            background: #2d2a23;
+        }
+        .hunter-records::-webkit-scrollbar-thumb {
+            background: #8f7a53;
+            border-radius: 3px;
+        }
+
+        .hunter-records br {
+            display: block;
+            margin: 0.1rem 0;
+            content: "";
+        }
+
+        .hunter-records:hover {
+            box-shadow: inset 0 0 0 1px #5e533b, 0 6px 14px rgba(0,0,0,0.5);
+            transition: box-shadow 0.3s;
+        }
+
+        /* 卷末铭文 */
+        .intro-motto {
+            text-align: right;
+            font-size: clamp(0.55rem, 1.6vh, 0.68rem);
+            margin-top: 0.6rem;
+            border-top: 1px dashed #4a4230;
+            padding-top: 0.6rem;
+            font-style: italic;
+            color: #958b6e;
+            letter-spacing: 0.5px;
+        }
+
+        /* ========= 音像库模态层 — 与主页面风格完全同步 ========= */
+        .media-vault {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(31, 30, 27, 0.97);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.25s, opacity 0.25s ease;
+            font-family: 'Noto Serif SC', system-ui, serif;
+        }
+
+        .media-vault.active {
+            visibility: visible;
+            opacity: 1;
+            transition: visibility 0s 0s, opacity 0.25s ease;
+        }
+
+        .vault-container {
+            background: #1f1e1b;
+            background-image: radial-gradient(circle at 25% 40%, rgba(80, 70, 55, 0.15) 1.2px, transparent 1.2px);
+            width: 95%;
+            max-width: 1600px;
+            height: 88vh;
+            max-height: 88vh;
+            border: 1px solid #5e5a4c;
+            border-radius: 6px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255, 255, 240, 0.03);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: vaultFadeSlideUp 0.32s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes vaultFadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .vault-header {
+            padding: 1rem 1.5rem;
+            background: #26241f;
+            border-bottom: 2px solid #8b7a5b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .vault-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            color: #e0cfaa;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .vault-title small {
+            font-size: 0.65rem;
+            color: #b8aa87;
+            margin-left: 10px;
+            letter-spacing: 1px;
+        }
+
+        .close-vault {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #b8aa87;
+            line-height: 1;
+            padding: 0 6px;
+            transition: all 0.2s ease;
+            font-family: monospace;
+        }
+
+        .close-vault:hover {
+            color: #e0cfaa;
+            transform: scale(1.05);
+        }
+
+        .vault-content {
+            padding: 1.2rem 1.5rem;
+            overflow-y: auto;
+            color: #ece4cf;
+            background: #1c1b17;
+            flex: 1;
+        }
+
+        .vault-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .vault-content::-webkit-scrollbar-track {
+            background: #2d2a23;
+            border-radius: 3px;
+        }
+        .vault-content::-webkit-scrollbar-thumb {
+            background: #8f7a53;
+            border-radius: 3px;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.2rem;
+        }
+
+        @media (min-width: 1400px) {
+            .media-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        @media (max-width: 767px) {
+            .media-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 媒体卡片 — 与主页面风格统一 */
+        .media-card {
+            background: #24221c;
+            border: 1px solid #4a4236;
+            border-radius: 6px;
+            padding: 0.9rem;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            animation: cardFadeIn 0.4s ease-out;
+        }
+
+        @keyframes cardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .media-card:hover {
+            border-color: #8f7a53;
+            background: #2a2822;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+        }
+
+        .media-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #1a1915;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.7rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid #3c372c;
+            transition: all 0.2s ease;
+        }
+
+        .media-container:hover {
+            border-color: #b39b6b;
+            transform: scale(0.99);
+        }
+
+        .media-container video,
+        .media-container img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .media-container:hover video,
+        .media-container:hover img {
+            transform: scale(1.02);
+        }
+
+        .media-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-left: 3px solid #8f7a53;
+            padding-left: 10px;
+            margin: 8px 0 4px;
+            color: #ece4cf;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .media-desc {
+            font-size: 0.68rem;
+            color: #b8aa87;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        .fullscreen-btn {
+            background: #2a2a24;
+            border: 1px solid #5e5a4c;
+            color: #e0cfaa;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.8rem;
+            border-radius: 48px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .fullscreen-btn:hover {
+            background: #3a3528;
+            border-color: #b39b6b;
+            color: #f5eace;
+            transform: scale(0.96);
+        }
+
+        .media-badge {
+            font-size: 0.6rem;
+            color: #b8aa87;
+            background: #2d2a23;
+            padding: 0.2rem 0.6rem;
+            border-radius: 48px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 页内全屏浮层 — 与主页面风格统一 */
+        .inline-fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 30, 27, 0.98);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.2s, opacity 0.2s ease;
+        }
+
+        .inline-fullscreen-overlay.active {
+            visibility: visible;
+            opacity: 1;
+            transition: visibility 0s 0s, opacity 0.2s ease;
+        }
+
+        .fullscreen-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.2rem 2rem;
+            background: linear-gradient(to bottom, rgba(38, 36, 31, 0.9), transparent);
+            display: flex;
+            justify-content: flex-end;
+            z-index: 2001;
+            pointer-events: none;
+        }
+
+        .fullscreen-close {
+            background: #2a2a24;
+            border: 1px solid #8b7a5b;
+            color: #e0cfaa;
+            font-size: 1.2rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+            font-family: monospace;
+            backdrop-filter: blur(4px);
+        }
+
+        .fullscreen-close:hover {
+            background: #3a3528;
+            border-color: #b39b6b;
+            color: #f5eace;
+            transform: scale(1.05);
+        }
+
+        .fullscreen-media-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            overflow: auto;
+        }
+
+        .fullscreen-media-container video,
+        .fullscreen-media-container img {
+            max-width: 95%;
+            max-height: 90%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+            border: 1px solid #5e5a4c;
+            animation: mediaZoomIn 0.25s ease-out;
+        }
+
+        @keyframes mediaZoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .fullscreen-media-container.img-zoomed img {
+            transform: scale(1.5);
+            cursor: zoom-out;
+            transition: transform 0.2s ease;
+        }
+
+        .fullscreen-media-container.img-zoomed {
+            cursor: zoom-out;
+        }
+
+        /* 响应式优化 */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .archive-header { padding: 0.6rem 1.5rem 0.4rem; }
+            .hunter-records { font-size: 0.68rem; line-height: 1.5; padding: 0.7rem 1.2rem; }
+            .testament-section { padding: 0.4rem 1rem; }
+            .av-button { padding: 0.35rem 1.2rem; font-size: 0.8rem; }
+            .media-container { height: 160px; }
+            .vault-content { padding: 0.8rem 1rem; }
+        }
+
+        @media (max-width: 640px) and (orientation: portrait) {
+            .archive-header { 
+                padding: 0.7rem 1rem 0.6rem;
+                flex-wrap: wrap;
+            }
+            .site-title { font-size: 1.4rem; letter-spacing: 2px; }
+            .av-button { padding: 0.4rem 1rem; font-size: 0.75rem; white-space: nowrap; }
+            .testament-section { padding: 0.4rem 0.8rem; }
+            .hunter-records { padding: 0.7rem 1rem; font-size: 0.68rem; line-height: 1.55; border-left-width: 4px; }
+            .intro-motto { margin-top: 0.4rem; padding-top: 0.4rem; font-size: 0.55rem; }
+            .vault-title { font-size: 1rem; }
+            .vault-title small { font-size: 0.55rem; }
+            .media-container { height: 180px; }
+        }
+
+        @media (max-width: 480px) {
+            .archive-header {
+                padding: 0.6rem 0.8rem;
+            }
+            .av-button {
+                padding: 0.35rem 0.9rem;
+                font-size: 0.7rem;
+                gap: 4px;
+            }
+            .site-title {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-height: 500px) {
+            .archive-header { padding: 0.4rem 1.2rem 0.3rem; }
+            .site-title { font-size: 1.2rem; }
+            .testament-section { padding: 0.2rem 0.8rem; }
+            .hunter-records { font-size: 0.6rem; line-height: 1.45; padding: 0.5rem 1rem; }
+            .intro-motto { display: none; }
+            .media-container { height: 130px; }
+        }
+    </style>
+</head>
+<body>
+<div class="archive-container">
+    <div class="archive-header">
+        <div class="title-wrapper">
+            <div class="site-title">大爷猎奇录</div>
+        </div>
+        <div class="header-btn">
+            <button id="openVaultBtn" class="av-button">⏻ 打开音像资料库</button>
+        </div>
+    </div>
+
+    <div class="testament-section">
+        <div class="chronicle">
+            <div class="hunter-records">
+                偷黄瓜 偷泥丸 偷鞋 拔链子<br>
+                顺筷子 顺碗 顺勺 顺碟子<br>
+                扣键盘 拔鼠标 日人 日地 日讲桌<br>
+                拆讲桌 拆水龙头 掰投影仪 掰垃圾桶盖<br>
+                捏仍子 骂街 尿树 上桌<br>
+                拆机箱盖 砸电脑屏幕 扣地板 复制一万个垃圾回收站<br>
+                砸华容道 拆窗户把 拆门把手<br>
+                偷假条 撕卷子 吃卷子 在卷子答题卡背面默诗<br>
+                干光军 干太太 干洋人 干京城<br>
+                站讲桌上跳舞 在楼道里唱歌 英语课拿地砖写扶清灭洋长义和团<br>
+                连拆两个水龙头见义勇为<br>
+                买牛粪扔人 造臭水放别的班讲桌里发酵一个寒假成尸臭味<br>
+                把几十个方面调料带从三楼扔下去<br>
+                从楼上往下倒开水<br>
+                凿墙 掰凳子腿 拆凳子背<br>
+                掰筷子 摔碗 在食堂桌子上站着吃麻辣烫 把三种食材放进碗里一打开直接流一地<br>
+                拿酸梅汤浇大堂绿萝<br>
+                把汇报厅凳子拆散架带回班<br>
+                拆自行车轮胎和车座并带进班上地理课玩 AI生成老实了猎奇照片并打印带进班级 在多媒体上放猎奇视频<br>
+                抽烟 喝酒 吃火锅<br>
+                偷食堂绿植 在楼道里大喊老师名字<br>
+                在楼道里和老师问好老师不理就喊跟你说话呢喊完就跑
+            </div>
+            <div class="intro-motto">
+                —— 以上俱为大爷自述 · 详见馆内珍藏 · 未经删润 ——
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 音像库模态框 — 风格与主页面完全同步 -->
+<div id="mediaVault" class="media-vault">
+    <div class="vault-container">
+        <div class="vault-header">
+            <div class="vault-title">
+                影像参问资料库 <small>「大爷猎奇录 · 参问资料馆」</small>
+            </div>
+            <button id="closeVaultBtn" class="close-vault" aria-label="关闭">✕</button>
+        </div>
+        <div class="vault-content">
+            <div class="media-grid" id="mediaGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 页内全屏浮层 -->
+<div id="inlineFullscreen" class="inline-fullscreen-overlay">
+    <div class="fullscreen-header">
+        <button id="fullscreenCloseBtn" class="fullscreen-close">✕</button>
+    </div>
+    <div id="fullscreenMediaContainer" class="fullscreen-media-container"></div>
+</div>
+
+<script>
+    let mediaCatalog = [];
+    let pausedVideosOnFullscreen = []; // 记录全屏前暂停的视频
+
+    function getMediaType(item) {
+        if (item.type) return item.type;
+        return /\.(jpg|jpeg|png|gif|webp)$/i.test(item.url) ? 'image' : 'video';
+    }
+
+    // 暂停音像库中所有正在播放的视频，并记录它们的状态
+    function pauseAllVideosInVault() {
+        const allVideos = document.querySelectorAll('#mediaGrid video');
+        pausedVideosOnFullscreen = [];
+        allVideos.forEach(video => {
+            if (!video.paused) {
+                video.pause();
+                pausedVideosOnFullscreen.push(video);
+            }
+        });
+    }
+
+    // 恢复之前被暂停的视频（可选，这里只记录不自动恢复，避免干扰）
+    // 但为了体验，我们不清除记录，只是静默暂停，关闭全屏时不自动恢复，让用户手动播放
+    // 这样更符合直觉：全屏时其他视频应该安静
+
+    function openInlineFullscreen(mediaElement, mediaType, mediaUrl, posterUrl) {
+        const overlay = document.getElementById('inlineFullscreen');
+        const container = document.getElementById('fullscreenMediaContainer');
+        if (!overlay || !container) return;
+        
+        // 重要：打开全屏前，先暂停音像库中所有正在播放的视频
+        pauseAllVideosInVault();
+        
+        container.innerHTML = '';
+        let isZoomed = false;
+        container.classList.remove('img-zoomed');
+        
+        if (mediaType === 'video') {
+            const video = document.createElement('video');
+            video.src = mediaUrl;
+            video.controls = true;
+            video.controlsList = 'nodownload';
+            if (posterUrl) video.poster = posterUrl;
+            video.style.maxWidth = '100%';
+            video.style.maxHeight = '100%';
+            container.appendChild(video);
+            window.currentFullscreenMedia = video;
+            window.currentMediaType = 'video';
+        } else {
+            const img = document.createElement('img');
+            img.src = mediaUrl;
+            img.alt = '全屏影像';
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.cursor = 'zoom-in';
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!isZoomed) {
+                    container.classList.add('img-zoomed');
+                    img.style.cursor = 'zoom-out';
+                    isZoomed = true;
+                } else {
+                    container.classList.remove('img-zoomed');
+                    img.style.cursor = 'zoom-in';
+                    isZoomed = false;
+                }
+            });
+            container.appendChild(img);
+            window.currentFullscreenMedia = img;
+            window.currentMediaType = 'image';
+        }
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeInlineFullscreen() {
+        const overlay = document.getElementById('inlineFullscreen');
+        if (!overlay) return;
+        if (window.currentFullscreenMedia && window.currentMediaType === 'video') {
+            window.currentFullscreenMedia.pause();
+        }
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        window.currentFullscreenMedia = null;
+        // 不清空记录，让用户自行决定是否继续播放其他视频
+    }
+
+    function buildMediaCards() {
+        const grid = document.getElementById('mediaGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        mediaCatalog.forEach((item, idx) => {
+            const type = getMediaType(item);
+            const card = document.createElement('div');
+            card.className = 'media-card';
+            card.style.animationDelay = `${idx * 0.03}s`;
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'media-container';
+            let mediaEl;
+            if (type === 'video') {
+                const vid = document.createElement('video');
+                vid.src = item.url;
+                vid.preload = 'metadata';
+                vid.controls = true;
+                vid.controlsList = 'nodownload';
+                if (item.poster) vid.poster = item.poster;
+                mediaEl = vid;
+            } else {
+                const img = document.createElement('img');
+                img.src = item.url;
+                img.alt = item.name;
+                img.loading = 'lazy';
+                mediaEl = img;
+            }
+            mediaContainer.appendChild(mediaEl);
+            mediaContainer.addEventListener('click', () => openInlineFullscreen(mediaEl, type, item.url, item.poster));
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'media-name';
+            nameDiv.textContent = item.name;
+            const descDiv = document.createElement('div');
+            descDiv.className = 'media-desc';
+            descDiv.textContent = item.desc;
+            const footer = document.createElement('div');
+            footer.className = 'card-footer';
+            const fsBtn = document.createElement('button');
+            fsBtn.className = 'fullscreen-btn';
+            fsBtn.innerHTML = '⛶ 全屏观看';
+            fsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openInlineFullscreen(mediaEl, type, item.url, item.poster);
+            });
+            const badge = document.createElement('span');
+            badge.className = 'media-badge';
+            badge.textContent = type === 'video' ? '▶ 影像档案' : '🖼️ 图像档案';
+            footer.appendChild(fsBtn);
+            footer.appendChild(badge);
+            card.appendChild(mediaContainer);
+            card.appendChild(nameDiv);
+            card.appendChild(descDiv);
+            card.appendChild(footer);
+            grid.appendChild(card);
+        });
+    }
+
+    // 加载外部媒体数据
+    function loadMediaData() {
+        const script = document.createElement('script');
+        script.src = 'media-data.js';
+        script.onload = function() {
+            if (window.MEDIA_CATALOG) {
+                mediaCatalog = window.MEDIA_CATALOG;
+                buildMediaCards();
+                window.mediaCardsBuilt = true;
+            }
+        };
+        script.onerror = function() {
+            console.warn('无法加载 media-data.js，使用默认空数据');
+            mediaCatalog = [];
+            buildMediaCards();
+        };
+        document.head.appendChild(script);
+    }
+
+    (function() {
+        const vault = document.getElementById('mediaVault');
+        const openBtn = document.getElementById('openVaultBtn');
+        const closeBtn = document.getElementById('closeVaultBtn');
+        const fsClose = document.getElementById('fullscreenCloseBtn');
+        let built = false;
+        
+        function pauseAllVideosInVaultHelper() {
+            document.querySelectorAll('#mediaGrid video').forEach(v => { if (!v.paused) v.pause(); });
+        }
+        
+        function openVault() {
+            if (!built) { 
+                if (!window.mediaCardsBuilt && mediaCatalog.length === 0) {
+                    loadMediaData();
+                } else if (mediaCatalog.length > 0 && !window.mediaCardsBuilt) {
+                    buildMediaCards();
+                    window.mediaCardsBuilt = true;
+                }
+                built = true;
+            } else if (mediaCatalog.length > 0 && document.getElementById('mediaGrid').children.length === 0) {
+                buildMediaCards();
+            }
+            vault.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            pauseAllVideosInVaultHelper();
+        }
+        function closeVault() {
+            vault.classList.remove('active');
+            document.body.style.overflow = '';
+            pauseAllVideosInVaultHelper();
+            closeInlineFullscreen();
+        }
+        openBtn.addEventListener('click', openVault);
+        closeBtn.addEventListener('click', closeVault);
+        fsClose.addEventListener('click', closeInlineFullscreen);
+        vault.addEventListener('click', (e) => { if (e.target === vault) closeVault(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('inlineFullscreen').classList.contains('active')) closeInlineFullscreen();
+                else if (vault.classList.contains('active')) closeVault();
+            }
+        });
+        const fullscreenOverlay = document.getElementById('inlineFullscreen');
+        fullscreenOverlay.addEventListener('click', (e) => { if (e.target === fullscreenOverlay) closeInlineFullscreen(); });
+        
+        // 预加载媒体数据
+        loadMediaData();
+    })();
+</script>
+</body>
+</html>
