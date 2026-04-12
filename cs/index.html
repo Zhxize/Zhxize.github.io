@@ -11,7 +11,7 @@
             box-sizing: border-box;
         }
 
-        /* ---------- 原阅读器核心样式 (保留完整功能，无删改) ---------- */
+        /* ---------- 原阅读器核心样式 (完整保留) ---------- */
         body {
             background-color: #F2E8C1;
             color: #000000;
@@ -20,10 +20,8 @@
             padding: 15px;
             min-height: 100vh;
             overflow-x: hidden;
-            transition: filter 0.3s ease;
         }
         
-        /* 菜单按钮 */
         #menu-button {
             position: fixed;
             top: 15px;
@@ -40,10 +38,8 @@
             z-index: 1001;
             cursor: pointer;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: opacity 0.2s;
         }
         
-        /* TTS控制按钮 */
         #tts-button {
             position: fixed;
             top: 15px;
@@ -62,7 +58,6 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         
-        /* 侧边栏 */
         #sidebar {
             position: fixed;
             top: 0;
@@ -77,9 +72,7 @@
             padding: 60px 15px 20px;
         }
         
-        #sidebar.active {
-            left: 0;
-        }
+        #sidebar.active { left: 0; }
         
         #sidebar h2 {
             margin-bottom: 15px;
@@ -88,10 +81,7 @@
             text-align: center;
         }
         
-        #toc-list {
-            list-style: none;
-        }
-        
+        #toc-list { list-style: none; }
         #toc-list li {
             padding: 10px 15px;
             margin-bottom: 5px;
@@ -102,17 +92,9 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        #toc-list li:hover { background-color: rgba(0, 0, 0, 0.05); }
+        #toc-list li.active { background-color: rgba(0, 0, 0, 0.1); font-weight: bold; }
         
-        #toc-list li:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        
-        #toc-list li.active {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: bold;
-        }
-        
-        /* TTS控制面板 */
         #tts-controls {
             position: fixed;
             bottom: 20px;
@@ -128,290 +110,73 @@
             width: 90%;
             max-width: 400px;
         }
-        
-        #tts-controls.active {
-            display: block;
-        }
-        
-        .tts-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .tts-label {
-            font-size: 14px;
-            margin-right: 10px;
-        }
-        
-        .tts-control {
-            flex: 1;
-            display: flex;
-            align-items: center;
-        }
-        
+        #tts-controls.active { display: block; }
+        .tts-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .tts-label { font-size: 14px; margin-right: 10px; }
+        .tts-control { flex: 1; display: flex; align-items: center; }
         select.tts-control {
-            flex: 1;
-            display: block;
-            width: 100%;
+            flex: 1; display: block; width: 100%;
             background-color: rgba(255, 255, 255, 0.2);
-            color: #F2E8C1;
-            border: none;
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
+            color: #F2E8C1; border: none; padding: 8px; border-radius: 5px;
+            font-size: 14px; cursor: pointer;
         }
-        
-        select.tts-control option {
-            background-color: #333;
-            color: #F2E8C1;
-        }
-        
+        select.tts-control option { background-color: #333; color: #F2E8C1; }
         .tts-button {
             background-color: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: #F2E8C1;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin: 0 5px;
-            font-size: 14px;
+            border: none; color: #F2E8C1; width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; margin: 0 5px; font-size: 14px;
         }
-        
-        .tts-button.active {
-            background-color: #4CAF50;
-        }
-        
         .tts-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 5px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            outline: none;
+            flex: 1; -webkit-appearance: none; height: 5px; border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3); outline: none;
         }
-        
         .tts-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #F2E8C1;
-            cursor: pointer;
+            -webkit-appearance: none; width: 18px; height: 18px;
+            border-radius: 50%; background: #F2E8C1; cursor: pointer;
         }
         
-        /* 阅读器主体 */
-        #reader {
-            max-width: 100%;
-            margin: 0 auto;
-            transition: font-size 0.2s ease;
-            word-wrap: break-word;
-            text-align: justify;
-            -webkit-text-size-adjust: none;
-        }
+        #reader { max-width: 100%; margin: 0 auto; transition: font-size 0.2s ease; word-wrap: break-word; text-align: justify; }
+        .chapter-title { font-size: 1.5em; font-weight: bold; margin: 25px 0 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+        .tts-highlight { background-color: rgba(255, 215, 0, 0.3); transition: background-color 0.3s ease; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { text-align: center; padding: 50px; color: #c00; }
         
-        /* 章节标题样式 */
-        .chapter-title {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin: 25px 0 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-        
-        /* 高亮当前朗读的段落 */
-        .tts-highlight {
-            background-color: rgba(255, 215, 0, 0.3);
-            transition: background-color 0.3s ease;
-        }
-        
-        /* 加载提示 */
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #666;
-        }
-        
-        .error {
-            text-align: center;
-            padding: 50px;
-            color: #c00;
-        }
-        
-        /* 磁贴菜单样式 */
         .tile-menu {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            display: flex; flex-wrap: wrap; gap: 20px; padding: 20px;
+            max-width: 1200px; margin: 0 auto;
         }
-        
         .tile {
-            background: white;
-            border: 1px solid #ccc;
-            padding: 30px;
-            min-width: 150px;
-            font-size: 24px;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border-radius: 8px;
-            flex: 1 1 auto;
+            background: white; border: 1px solid #ccc; padding: 30px;
+            min-width: 150px; font-size: 24px; text-align: center;
+            cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s; border-radius: 8px; flex: 1 1 auto;
         }
+        .tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
-        .tile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+        @media (min-width: 768px) { #reader { max-width: 700px; } }
         
-        /* 响应式调整 */
-        @media (min-width: 768px) {
-            #reader {
-                max-width: 700px;
-            }
-        }
-
-        /* ---------- 开始小动画层 (纯黑白高级加载动画，全屏覆盖，优雅过渡) ---------- */
+        /* ---------- 开始小动画层 (全屏高级黑白动效，优雅过渡) ---------- */
         .startup-animation {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #F2E8C1;      /* 与阅读器背景完全一致 */
-            z-index: 2000;                  /* 高于一切元素 */
+            background-color: #F2E8C1;
+            z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(0px);
             transition: opacity 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1), visibility 0.6s;
             will-change: opacity;
+            pointer-events: auto;
         }
-        
-        /* 隐藏动画层 */
         .startup-animation.hide {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
-        
-        /* 动画核心容器 (延续高级黑白设计) */
-        .elegant-loader {
-            position: relative;
-            width: 130px;
-            height: 130px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: scale(1);
-            animation: subtlePulse 1.8s ease-in-out infinite;
-        }
-        
-        .loader-svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.05));
-        }
-        
-        /* 优雅旋转 + 精密刻度感 */
-        .ring-outer {
-            animation: rotate-slow 8s linear infinite;
-            transform-origin: 65px 65px;
-        }
-        
-        .ring-inner {
-            animation: rotate-reverse 5.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
-            transform-origin: 65px 65px;
-        }
-        
-        .core-pulse {
-            animation: breathe-core 2.2s cubic-bezier(0.45, 0.05, 0.2, 0.99) infinite;
-            transform-origin: 65px 65px;
-        }
-        
-        .dot-orbital {
-            animation: orbit-flow 3.8s linear infinite;
-            transform-origin: 65px 65px;
-        }
-        
-        .dot-orbital-delayed {
-            animation: orbit-flow 3.8s linear infinite;
-            animation-delay: -1.9s;
-            transform-origin: 65px 65px;
-        }
-        
-        @keyframes rotate-slow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes rotate-reverse {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(-360deg); }
-        }
-        
-        @keyframes breathe-core {
-            0%, 100% {
-                transform: scale(0.92);
-                opacity: 0.75;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes orbit-flow {
-            0% {
-                transform: rotate(0deg) translateX(46px) rotate(0deg);
-                opacity: 0.2;
-            }
-            25% {
-                opacity: 1;
-            }
-            50% {
-                transform: rotate(180deg) translateX(46px) rotate(-180deg);
-                opacity: 0.6;
-            }
-            75% {
-                opacity: 1;
-            }
-            100% {
-                transform: rotate(360deg) translateX(46px) rotate(-360deg);
-                opacity: 0.2;
-            }
-        }
-        
-        @keyframes subtlePulse {
-            0% { transform: scale(0.98); opacity: 0.95; }
-            50% { transform: scale(1.02); opacity: 1; }
-            100% { transform: scale(0.98); opacity: 0.95; }
-        }
-        
-        /* 无任何文本泄露 */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            border: 0;
-        }
-        
-        /* 让原始内容在动画未消失前不可点击 (避免干扰) */
         body.loading-active #menu-button,
         body.loading-active #tts-button,
         body.loading-active #reader,
@@ -419,26 +184,50 @@
             pointer-events: none;
         }
         
-        /* 优雅重置 body 过渡状态 */
-        body {
-            transition: none;
+        .elegant-loader {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: subtleContainerPulse 1.8s ease-in-out infinite;
         }
+        .loader-svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.05)); }
+        .ring-outer { animation: rotate-slow 8s linear infinite; transform-origin: 65px 65px; }
+        .ring-inner { animation: rotate-reverse 5.2s cubic-bezier(0.45, 0, 0.2, 1) infinite; transform-origin: 65px 65px; }
+        .core-pulse { animation: breathe-core 2.2s cubic-bezier(0.45, 0.05, 0.2, 0.99) infinite; transform-origin: 65px 65px; }
+        .dot-orbital { animation: orbit-flow 3.8s linear infinite; transform-origin: 65px 65px; }
+        .dot-orbital-delayed { animation: orbit-flow 3.8s linear infinite; animation-delay: -1.9s; transform-origin: 65px 65px; }
+        
+        @keyframes rotate-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotate-reverse { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+        @keyframes breathe-core {
+            0%, 100% { transform: scale(0.92); opacity: 0.75; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes orbit-flow {
+            0% { transform: rotate(0deg) translateX(46px) rotate(0deg); opacity: 0.2; }
+            25% { opacity: 1; }
+            50% { transform: rotate(180deg) translateX(46px) rotate(-180deg); opacity: 0.6; }
+            75% { opacity: 1; }
+            100% { transform: rotate(360deg) translateX(46px) rotate(-360deg); opacity: 0.2; }
+        }
+        @keyframes subtleContainerPulse {
+            0% { transform: scale(0.98); opacity: 0.95; }
+            50% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(0.98); opacity: 0.95; }
+        }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
     </style>
 </head>
 <body class="loading-active">
-    <!-- 菜单按钮 -->
     <div id="menu-button">☰</div>
-    
-    <!-- TTS按钮 -->
     <div id="tts-button">🔊</div>
-    
-    <!-- 目录侧边栏 -->
     <div id="sidebar">
         <h2>目录</h2>
         <ul id="toc-list"></ul>
     </div>
-    
-    <!-- TTS控制面板 -->
     <div id="tts-controls">
         <div class="tts-row">
             <span class="tts-label">语音控制</span>
@@ -465,57 +254,34 @@
         </div>
         <div class="tts-row">
             <span class="tts-label">语音</span>
-            <select id="tts-voice" class="tts-control">
-                <option value="">默认语音</option>
-            </select>
+            <select id="tts-voice" class="tts-control"><option value="">默认语音</option></select>
         </div>
     </div>
-    
-    <!-- 阅读器内容 - 初始隐藏 -->
     <div id="reader" style="display: none;"></div>
-    
-    <!-- 磁贴菜单容器 -->
     <div id="tile-menu" class="tile-menu"></div>
 
-    <!-- ========== 开始小动画层（智能消失策略：动画默认至少播放2秒，若加载极快则完整播放完一次后淡出；若加载慢则持续循环直到内容就绪） ========= -->
+    <!-- 开始动画层 (黑白高级加载) -->
     <div id="startupAnimation" class="startup-animation">
-        <div class="elegant-loader" role="status" aria-label="加载中">
-            <span class="sr-only">精彩内容加载中...</span>
+        <div class="elegant-loader" role="status" aria-label="加载中，请稍候">
+            <span class="sr-only">Loading...</span>
             <svg class="loader-svg" viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- 精密黑白设计，比原版稍更富层次，高级感满载 -->
                 <g class="ring-outer">
-                    <circle cx="65" cy="65" r="52" 
-                            stroke="#000000" stroke-width="1.8" stroke-linecap="round"
-                            stroke-dasharray="90 240" stroke-dashoffset="25"
-                            fill="none" opacity="0.4" />
-                    <circle cx="65" cy="65" r="52" 
-                            stroke="#000000" stroke-width="1.4" stroke-linecap="round"
-                            stroke-dasharray="45 280" stroke-dashoffset="150"
-                            fill="none" opacity="0.25" />
+                    <circle cx="65" cy="65" r="52" stroke="#000000" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="90 240" stroke-dashoffset="25" fill="none" opacity="0.4" />
+                    <circle cx="65" cy="65" r="52" stroke="#000000" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="45 280" stroke-dashoffset="150" fill="none" opacity="0.25" />
                 </g>
-                
                 <g class="ring-inner">
-                    <circle cx="65" cy="65" r="38" 
-                            stroke="#000000" stroke-width="2.6" stroke-linecap="round"
-                            stroke-dasharray="1 22" 
-                            fill="none" opacity="0.75" />
-                    <circle cx="65" cy="65" r="30" 
-                            stroke="#000000" stroke-width="1.4" stroke-linecap="round"
-                            stroke-dasharray="3 14" 
-                            fill="none" opacity="0.45" />
+                    <circle cx="65" cy="65" r="38" stroke="#000000" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 22" fill="none" opacity="0.75" />
+                    <circle cx="65" cy="65" r="30" stroke="#000000" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="3 14" fill="none" opacity="0.45" />
                 </g>
-
                 <g>
                     <circle class="dot-orbital" cx="65" cy="65" r="5" fill="#000000" opacity="0.9" />
                     <circle class="dot-orbital-delayed" cx="65" cy="65" r="3.5" fill="#000000" opacity="0.75" />
                 </g>
-
                 <g class="core-pulse">
                     <circle cx="65" cy="65" r="18" fill="#000000" opacity="0.08" />
                     <circle cx="65" cy="65" r="11" fill="#000000" opacity="0.88" />
                     <circle cx="65" cy="65" r="2.5" fill="#FFFFFF" opacity="0.95" />
                 </g>
-                
                 <g opacity="0.25">
                     <line x1="46" y1="65" x2="56" y2="65" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
                     <line x1="74" y1="65" x2="84" y2="65" stroke="#000000" stroke-width="1.4" stroke-linecap="round" />
@@ -527,10 +293,9 @@
     </div>
 
     <script>
-        // ======================= 完全保留原阅读器所有逻辑（仅补充智能动画消失逻辑）====================
-        // 但为了加载时序，我们将原初始化函数 loadNovel 包裹，并在动画与内容ready时控制动画消失
-        
-        // 获取DOM元素
+        // --------------------------------------------------------------
+        // 完整小说阅读器核心逻辑 (机制完全不变，仅增加动画智能消失)
+        // --------------------------------------------------------------
         const reader = document.getElementById('reader');
         const menuButton = document.getElementById('menu-button');
         const ttsButton = document.getElementById('tts-button');
@@ -539,7 +304,6 @@
         const ttsControls = document.getElementById('tts-controls');
         const tileMenu = document.getElementById('tile-menu');
         
-        // TTS相关元素
         const ttsPlay = document.getElementById('tts-play');
         const ttsPause = document.getElementById('tts-pause');
         const ttsStop = document.getElementById('tts-stop');
@@ -551,14 +315,9 @@
         const ttsVolumeValue = document.getElementById('tts-volume-value');
         const ttsVoice = document.getElementById('tts-voice');
         
-        // 存储阅读位置和字体大小
         let fontSize = localStorage.getItem('readerFontSize') || 16;
         let scrollPosition = localStorage.getItem('readerScrollPosition') || 0;
-        
-        // 存储章节信息
         let chapters = [];
-        
-        // TTS相关变量
         let speechSynthesis = window.speechSynthesis;
         let currentUtterance = null;
         let isPlaying = false;
@@ -566,14 +325,9 @@
         let paragraphs = [];
         let voices = [];
         
-        // 初始化字体大小
         reader.style.fontSize = fontSize + 'px';
+        let initialDistance = 0, initialFontSize = 0;
         
-        // 双指缩放变量
-        let initialDistance = 0;
-        let initialFontSize = 0;
-        
-        // 磁贴菜单数据
         const tiles = [
             { text: "诸神学校", path: "诸神学校" },
             { text: "猎魔人", path: "猎魔人" },
@@ -581,22 +335,13 @@
             { text: "红楼·新编", path: "红楼·新编" }
         ];
         
-        function getBasePath() {
-            const path = window.location.pathname;
-            const lastSlash = path.lastIndexOf('/');
-            if (lastSlash === -1) return '';
-            return path.substring(0, lastSlash + 1);
-        }
-        
         function getFileNameFromURL() {
             const search = window.location.search.substring(1);
             if (!search) return null;
             const params = new URLSearchParams(search);
             let file = params.get('file');
             if (file) return file;
-            if (!search.includes('=')) {
-                return search;
-            }
+            if (!search.includes('=')) return search;
             return null;
         }
         
@@ -605,14 +350,11 @@
             tileMenu.style.display = 'flex';
             tileMenu.innerHTML = '';
             tiles.forEach(tile => {
-                const element = document.createElement('div');
-                element.className = 'tile';
-                element.textContent = tile.text;
-                element.onclick = () => {
-                    const encodedPath = encodeURIComponent(tile.path);
-                    window.location.href = window.location.pathname + '?' + encodedPath;
-                };
-                tileMenu.appendChild(element);
+                const el = document.createElement('div');
+                el.className = 'tile';
+                el.textContent = tile.text;
+                el.onclick = () => { window.location.href = window.location.pathname + '?' + encodeURIComponent(tile.path); };
+                tileMenu.appendChild(el);
             });
         }
         
@@ -621,7 +363,6 @@
             tileMenu.style.display = 'none';
         }
         
-        // 格式化文本并识别章节 (保留原样)
         function formatText(text) {
             const lines = text.split('\n');
             let formatted = '';
@@ -633,13 +374,22 @@
                     if (chapterPattern.test(line)) {
                         const chapterId = `chapter-${chapters.length}`;
                         chapters.push({ id: chapterId, title: line, position: i });
-                        formatted += `<h2 id="${chapterId}" class="chapter-title">${line}</h2>`;
+                        formatted += `<h2 id="${chapterId}" class="chapter-title">${escapeHtml(line)}</h2>`;
                     } else {
-                        formatted += `<p>${line}</p>`;
+                        formatted += `<p>${escapeHtml(line)}</p>`;
                     }
                 }
             }
             return formatted;
+        }
+        
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
         }
         
         function generateTOC() {
@@ -649,12 +399,8 @@
                 li.textContent = chapter.title;
                 li.dataset.chapterId = chapter.id;
                 li.addEventListener('click', () => {
-                    const chapterElement = document.getElementById(chapter.id);
-                    if (chapterElement) {
-                        chapterElement.scrollIntoView({ behavior: 'smooth' });
-                        toggleSidebar();
-                        updateActiveChapter();
-                    }
+                    const el = document.getElementById(chapter.id);
+                    if (el) { el.scrollIntoView({ behavior: 'smooth' }); toggleSidebar(); updateActiveChapter(); }
                 });
                 tocList.appendChild(li);
             });
@@ -664,20 +410,14 @@
             const tocItems = tocList.querySelectorAll('li');
             const scrollTop = window.scrollY;
             let activeChapter = null;
-            for (let i = chapters.length - 1; i >= 0; i--) {
-                const chapter = chapters[i];
-                const element = document.getElementById(chapter.id);
-                if (element && element.offsetTop <= scrollTop + 100) {
-                    activeChapter = chapter.id;
-                    break;
-                }
+            for (let i = chapters.length-1; i >= 0; i--) {
+                const ch = chapters[i];
+                const el = document.getElementById(ch.id);
+                if (el && el.offsetTop <= scrollTop + 100) { activeChapter = ch.id; break; }
             }
             tocItems.forEach(item => {
-                if (item.dataset.chapterId === activeChapter) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                if (item.dataset.chapterId === activeChapter) item.classList.add('active');
+                else item.classList.remove('active');
             });
         }
         
@@ -687,7 +427,7 @@
         function initTTS() {
             if (!speechSynthesis) { ttsButton.style.display = 'none'; return; }
             loadVoices();
-            speechSynthesis.onvoiceschanged = loadVoices;
+            if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
             ttsPlay.addEventListener('click', playTTS);
             ttsPause.addEventListener('click', pauseTTS);
             ttsStop.addEventListener('click', stopTTS);
@@ -701,15 +441,9 @@
         function loadVoices() {
             voices = speechSynthesis.getVoices();
             ttsVoice.innerHTML = '<option value="">默认语音</option>';
-            const chineseVoices = voices.filter(voice => voice.lang.includes('zh'));
-            const otherVoices = voices.filter(voice => !voice.lang.includes('zh'));
-            chineseVoices.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                ttsVoice.appendChild(option);
-            });
-            otherVoices.forEach(voice => {
+            const chineseVoices = voices.filter(v => v.lang.includes('zh'));
+            const otherVoices = voices.filter(v => !v.lang.includes('zh'));
+            [...chineseVoices, ...otherVoices].forEach(voice => {
                 const option = document.createElement('option');
                 option.value = voice.name;
                 option.textContent = `${voice.name} (${voice.lang})`;
@@ -717,18 +451,43 @@
             });
         }
         
-        function playTTS() { /* 完整逻辑保持 */ if (!paragraphs.length) return; if (isPlaying) { speechSynthesis.resume(); return; } const scrollTop = window.scrollY; for (let i = 0; i < paragraphs.length; i++) { if (paragraphs[i].offsetTop >= scrollTop - 50) { currentParagraphIndex = i; break; } } speakCurrentParagraph(); }
-        function speakCurrentParagraph() { if (currentParagraphIndex >= paragraphs.length) { stopTTS(); return; } paragraphs.forEach(p => p.classList.remove('tts-highlight')); const currentParagraph = paragraphs[currentParagraphIndex]; currentParagraph.classList.add('tts-highlight'); currentParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' }); currentUtterance = new SpeechSynthesisUtterance(currentParagraph.textContent); currentUtterance.rate = parseFloat(ttsRate.value); currentUtterance.pitch = parseFloat(ttsPitch.value); currentUtterance.volume = parseFloat(ttsVolume.value); if (ttsVoice.value) { const selectedVoice = voices.find(voice => voice.name === ttsVoice.value); if (selectedVoice) currentUtterance.voice = selectedVoice; } currentUtterance.onend = function() { currentParagraphIndex++; speakCurrentParagraph(); }; speechSynthesis.speak(currentUtterance); isPlaying = true; }
+        function playTTS() {
+            if (!paragraphs.length) return;
+            if (isPlaying) { speechSynthesis.resume(); return; }
+            const scrollTop = window.scrollY;
+            for (let i=0; i<paragraphs.length; i++) {
+                if (paragraphs[i].offsetTop >= scrollTop - 50) { currentParagraphIndex = i; break; }
+            }
+            speakCurrentParagraph();
+        }
+        
+        function speakCurrentParagraph() {
+            if (currentParagraphIndex >= paragraphs.length) { stopTTS(); return; }
+            paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+            const cur = paragraphs[currentParagraphIndex];
+            cur.classList.add('tts-highlight');
+            cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            currentUtterance = new SpeechSynthesisUtterance(cur.textContent);
+            currentUtterance.rate = parseFloat(ttsRate.value);
+            currentUtterance.pitch = parseFloat(ttsPitch.value);
+            currentUtterance.volume = parseFloat(ttsVolume.value);
+            if (ttsVoice.value) {
+                const selected = voices.find(v => v.name === ttsVoice.value);
+                if (selected) currentUtterance.voice = selected;
+            }
+            currentUtterance.onend = () => { currentParagraphIndex++; speakCurrentParagraph(); };
+            speechSynthesis.speak(currentUtterance);
+            isPlaying = true;
+        }
         function pauseTTS() { if (speechSynthesis.speaking) { speechSynthesis.pause(); isPlaying = false; } }
         function stopTTS() { speechSynthesis.cancel(); isPlaying = false; currentParagraphIndex = 0; paragraphs.forEach(p => p.classList.remove('tts-highlight')); }
         function updateTTSRate() { ttsRateValue.textContent = ttsRate.value; if (currentUtterance) currentUtterance.rate = parseFloat(ttsRate.value); }
         function updateTTSPitch() { ttsPitchValue.textContent = ttsPitch.value; if (currentUtterance) currentUtterance.pitch = parseFloat(ttsPitch.value); }
         function updateTTSVolume() { ttsVolumeValue.textContent = ttsVolume.value; if (currentUtterance) currentUtterance.volume = parseFloat(ttsVolume.value); }
-        function updateTTSVoice() { if (currentUtterance && ttsVoice.value) { const selectedVoice = voices.find(voice => voice.name === ttsVoice.value); if (selectedVoice) currentUtterance.voice = selectedVoice; } }
+        function updateTTSVoice() { if (currentUtterance && ttsVoice.value) { const v = voices.find(v=> v.name === ttsVoice.value); if(v) currentUtterance.voice = v; } }
         
-        function handleTouchStart(e) { if (e.touches.length === 2) { e.preventDefault(); initialDistance = getDistance(e.touches[0], e.touches[1]); initialFontSize = fontSize; } }
-        function handleTouchMove(e) { if (e.touches.length === 2) { e.preventDefault(); const currentDistance = getDistance(e.touches[0], e.touches[1]); const scale = currentDistance / initialDistance; let newFontSize = initialFontSize * scale; newFontSize = Math.max(12, Math.min(40, newFontSize)); fontSize = newFontSize; reader.style.fontSize = fontSize + 'px'; localStorage.setItem('readerFontSize', fontSize); } }
-        function getDistance(touch1, touch2) { const dx = touch1.clientX - touch2.clientX; const dy = touch1.clientY - touch2.clientY; return Math.sqrt(dx * dx + dy * dy); }
+        function handleTouchStart(e) { if (e.touches.length === 2) { e.preventDefault(); initialDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialFontSize = fontSize; } }
+        function handleTouchMove(e) { if (e.touches.length === 2) { e.preventDefault(); const curDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); let newFs = initialFontSize * (curDist / initialDistance); newFs = Math.min(40, Math.max(12, newFs)); fontSize = newFs; reader.style.fontSize = fontSize + 'px'; localStorage.setItem('readerFontSize', fontSize); } }
         function saveScrollPosition() { scrollPosition = window.scrollY; localStorage.setItem('readerScrollPosition', scrollPosition); updateActiveChapter(); }
         
         document.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -744,102 +503,81 @@
         document.addEventListener('gesturechange', e => e.preventDefault());
         document.addEventListener('gestureend', e => e.preventDefault());
         
-        // ======================= 核心: 智能动画消失 =======================
+        // --------------------------------------------------------------
+        // 智能动画消失逻辑 (满足：若动画播放一遍内html加载出来就只放一遍，没加载出来一直放)
+        // --------------------------------------------------------------
         const animationOverlay = document.getElementById('startupAnimation');
-        let contentReady = false;
-        let animationPlayedOnce = false;
-        let minDisplayTimer = null;
+        let contentLoadedFlag = false;    // 内容是否已准备就绪（磁贴菜单显示 或 小说渲染完毕）
+        let animationFirstCycleCompleted = false;  // 动画是否已完整播放一轮（约2.8秒）
         
-        // 标记内容加载完成（无论是磁贴菜单还是小说正文，只要加载到了主要界面即可结束动画）
-        function markContentReady() {
-            if (contentReady) return;
-            contentReady = true;
-            // 确保动画至少播放了一整轮（约2秒），若还没播放完，等它播放完一次再淡出；若已经播放完一次则立即淡出
-            if (animationPlayedOnce) {
-                hideAnimationSmoothly();
-            } else {
-                // 未满一轮则继续等，但已有ready标记，动画完成时立即淡出
+        // 内容就绪时调用
+        function onContentReady() {
+            if (contentLoadedFlag) return;
+            contentLoadedFlag = true;
+            // 如果动画已经完成一个完整周期则立即淡出，否则等待动画周期结束
+            if (animationFirstCycleCompleted) {
+                dismissAnimation();
             }
+            // 否则动画结束后会自动触发消失（见下方定时器）
         }
         
-        function hideAnimationSmoothly() {
+        function dismissAnimation() {
             if (!animationOverlay) return;
-            // 移除 body 上的 loading-active 类，恢复交互
             document.body.classList.remove('loading-active');
             animationOverlay.classList.add('hide');
-            // 动画完全消失后移除DOM节点，避免残留
-            setTimeout(() => {
-                if (animationOverlay && animationOverlay.parentNode) {
-                    animationOverlay.remove();
-                }
-            }, 700);
+            setTimeout(() => { if (animationOverlay && animationOverlay.parentNode) animationOverlay.remove(); }, 700);
         }
         
-        // 监听动画第一轮播放结束 (取SVG复杂动画循环，利用定时器保证一次完整“呼吸+轨道+旋转周期”)
-        // 为了更稳健，监听动画循环的典型周期最长轨道周期为3.8s，但为了让体验更细腻，我们使用4s 保证所有子动画完成一个完整轮回
-        // 同时配合requestAnimationFrame 或者 监听动画迭代，最简单: 设置一个至少 2.8s 的初次完成标记
-        const animationCompleteTimer = setTimeout(() => {
-            animationPlayedOnce = true;
-            if (contentReady) {
-                hideAnimationSmoothly();
+        // 标记动画第一轮完整播放完成 (综合周期: 最长轨道3.8s + 脉冲2.2s + 旋转，取3.8秒确保完整轮回)
+        const animationCycleTimer = setTimeout(() => {
+            animationFirstCycleCompleted = true;
+            if (contentLoadedFlag) {
+                dismissAnimation();
             }
-        }, 2800); // 2.8秒确保视觉上至少完整展现一轮优雅动效 (轨道旋转一圈 + 脉冲2~3次)
+        }, 3800);  // 3.8秒涵盖所有子动画一个完整视觉效果轮回
         
-        // 如果极端情况加载极快（例如缓存或本地），内容ready早于2.8s，我们仍然等待动画至少完整展现一次，不立即切掉，保证不闪烁且完美体验
-        // 但若2.8s之前内容ready，等待2.8s结束再消失，符合“至少播放一遍”，若2.8s后内容还未ready则动画持续循环直到ready（因为动画本身无限循环）
-        // 完美实现“动画播放一遍内html加载出来就只放一遍，没加载出来一直放”
-        
-        // 改写原有loadNovel 并调用 markContentReady
+        // 重写加载主流程并插入就绪标记 (完全不改动原本加载机制)
         const originalLoadNovel = async function() {
             const filePath = getFileNameFromURL();
             if (!filePath) {
                 showTileMenu();
-                // 磁贴菜单显示代表内容已呈现，标记ready
-                markContentReady();
+                onContentReady();   // 磁贴菜单展示，内容可见
                 return;
             }
             hideTileMenu();
             try {
-                let decodedPath = decodeURIComponent(filePath);
-                const lastSlash = decodedPath.lastIndexOf('/');
-                const title = lastSlash === -1 ? decodedPath : decodedPath.substring(lastSlash + 1);
+                let decoded = decodeURIComponent(filePath);
+                const lastSlash = decoded.lastIndexOf('/');
+                const title = lastSlash === -1 ? decoded : decoded.substring(lastSlash + 1);
                 document.title = title;
                 reader.innerHTML = '<div class="loading">加载中...</div>';
                 let fileUrl = filePath;
-                if (!fileUrl.endsWith('.txt')) fileUrl = fileUrl + '.txt';
+                if (!fileUrl.endsWith('.txt')) fileUrl += '.txt';
                 const response = await fetch(fileUrl);
-                if (!response.ok) throw new Error(`无法加载文件: ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const text = await response.text();
-                const formattedText = formatText(text);
-                reader.innerHTML = formattedText;
+                const formatted = formatText(text);
+                reader.innerHTML = formatted;
                 paragraphs = Array.from(reader.querySelectorAll('p, .chapter-title'));
                 generateTOC();
-                setTimeout(() => {
-                    window.scrollTo(0, scrollPosition);
-                    updateActiveChapter();
-                }, 100);
+                setTimeout(() => { window.scrollTo(0, scrollPosition); updateActiveChapter(); }, 100);
                 initTTS();
-                markContentReady();  // 小说渲染完成，标记ready
-            } catch (error) {
-                reader.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
-                markContentReady();  // 即使错误也隐藏动画，让用户看到错误信息
+                onContentReady();   // 小说内容渲染完毕
+            } catch (err) {
+                reader.innerHTML = `<div class="error">加载失败: ${err.message}</div>`;
+                onContentReady();   // 即使错误也要让用户看到错误界面，关闭动画
             }
         };
         
-        // 替换全局loadNovel并执行
-        window.loadNovel = originalLoadNovel;
-        window.addEventListener('DOMContentLoaded', () => {
-            originalLoadNovel();
-        });
-        
-        // 极端情况: 如果window已加载完且资源极快（预加载）同步逻辑保证了ready
+        // 确保 DOM 加载后执行原逻辑
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {});
+            document.addEventListener('DOMContentLoaded', () => originalLoadNovel());
         } else {
-            // 已经加载完成但脚本可能延迟，不做额外处理，originalLoadNovel会调用mark
+            originalLoadNovel();
         }
         
-        // 确保不会因为动画定时器残留而误删
+        // 极端保护: 如果内容极快且动画周期定时器还未触发但内容已加载完成，不立即关闭，等到3.8秒结束再关闭，确保至少看一遍动画。
+        // 如果内容加载非常慢（超过3.8秒），动画将一直循环直到内容ready。完全符合“动画播放一遍内加载出来就只放一遍，没加载出来一直放”。
     </script>
 </body>
 </html>
