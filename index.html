@@ -279,9 +279,144 @@
                 max-width: 700px;
             }
         }
+
+        /* ===== 加载遮罩层 ===== */
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: #F2E8C1;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .elegant-loader {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.04));
+        }
+
+        /* 外层旋转环 */
+        .ring-outer {
+            animation: loader-rotate-slow 8s linear infinite;
+            transform-origin: 60px 60px;
+        }
+
+        /* 内层逆旋转 */
+        .ring-inner {
+            animation: loader-rotate-reverse 5s ease-in-out infinite;
+            transform-origin: 60px 60px;
+        }
+
+        /* 核心脉冲圆 */
+        .core-pulse {
+            animation: loader-breathe 2.2s cubic-bezier(0.45, 0.05, 0.2, 0.99) infinite;
+            transform-origin: 60px 60px;
+        }
+
+        /* 轨道流动点 */
+        .dot-orbital {
+            animation: loader-orbit-flow 3.6s linear infinite;
+            transform-origin: 60px 60px;
+        }
+
+        .dot-orbital-delayed {
+            animation: loader-orbit-flow 3.6s linear infinite;
+            animation-delay: -1.8s;
+            transform-origin: 60px 60px;
+        }
+
+        @keyframes loader-rotate-slow {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes loader-rotate-reverse {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        @keyframes loader-breathe {
+            0%, 100% { transform: scale(0.92); opacity: 0.7; }
+            50%       { transform: scale(1.08); opacity: 1; }
+        }
+
+        @keyframes loader-orbit-flow {
+            0%   { transform: rotate(0deg)   translateX(42px) rotate(0deg);    opacity: 0.2; }
+            25%  {                                                               opacity: 1;   }
+            50%  { transform: rotate(180deg) translateX(42px) rotate(-180deg); opacity: 0.6; }
+            75%  {                                                               opacity: 1;   }
+            100% { transform: rotate(360deg) translateX(42px) rotate(-360deg); opacity: 0.2; }
+        }
     </style>
 </head>
 <body>
+    <!-- 加载遮罩层 -->
+    <div id="loading-overlay" role="status" aria-label="加载中，请稍候">
+        <div class="elegant-loader">
+            <svg class="loader-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 外层旋转圆环 -->
+                <g class="ring-outer">
+                    <circle cx="60" cy="60" r="48"
+                            stroke="#000000" stroke-width="1.6" stroke-linecap="round"
+                            stroke-dasharray="80 220" stroke-dashoffset="20"
+                            fill="none" opacity="0.4" />
+                    <circle cx="60" cy="60" r="48"
+                            stroke="#000000" stroke-width="1.2" stroke-linecap="round"
+                            stroke-dasharray="40 260" stroke-dashoffset="140"
+                            fill="none" opacity="0.25" />
+                </g>
+                <!-- 内层逆旋转环 -->
+                <g class="ring-inner">
+                    <circle cx="60" cy="60" r="34"
+                            stroke="#000000" stroke-width="2.4" stroke-linecap="round"
+                            stroke-dasharray="1 18"
+                            fill="none" opacity="0.7" />
+                    <circle cx="60" cy="60" r="28"
+                            stroke="#000000" stroke-width="1.2" stroke-linecap="round"
+                            stroke-dasharray="2 12"
+                            fill="none" opacity="0.4" />
+                </g>
+                <!-- 轨道流动小圆点 -->
+                <g>
+                    <circle class="dot-orbital" cx="60" cy="60" r="4.5" fill="#000000" opacity="0.9" />
+                    <circle class="dot-orbital-delayed" cx="60" cy="60" r="3.2" fill="#000000" opacity="0.7" />
+                </g>
+                <!-- 中心脉冲圆 -->
+                <g class="core-pulse">
+                    <circle cx="60" cy="60" r="16" fill="#000000" opacity="0.08" />
+                    <circle cx="60" cy="60" r="10" fill="#000000" opacity="0.85" />
+                    <circle cx="60" cy="60" r="2.2" fill="#FFFFFF" opacity="0.9" />
+                </g>
+                <!-- 十字准星线 -->
+                <g opacity="0.2">
+                    <line x1="42" y1="60" x2="52" y2="60" stroke="#000000" stroke-width="1.2" stroke-linecap="round" />
+                    <line x1="68" y1="60" x2="78" y2="60" stroke="#000000" stroke-width="1.2" stroke-linecap="round" />
+                    <line x1="60" y1="42" x2="60" y2="52" stroke="#000000" stroke-width="1.2" stroke-linecap="round" />
+                    <line x1="60" y1="68" x2="60" y2="78" stroke="#000000" stroke-width="1.2" stroke-linecap="round" />
+                </g>
+            </svg>
+        </div>
+    </div>
+
     <!-- 菜单按钮 -->
     <div id="menu-button">☰</div>
     
@@ -355,20 +490,30 @@
         const ttsVolumeValue = document.getElementById('tts-volume-value');
         const ttsVoice = document.getElementById('tts-voice');
         
-        // 存储阅读位置和字体大小
+        // 当前小说的唯一标识（用于按小说分别存储状态）
+        let currentNovelKey = '';
+
+        // 生成带小说前缀的存储键
+        function storageKey(suffix) {
+            return 'novel_' + currentNovelKey + '_' + suffix;
+        }
+
+        // 存储阅读位置和字体大小（字体大小全局共享，滚动位置按小说）
         let fontSize = localStorage.getItem('readerFontSize') || 16;
-        let scrollPosition = localStorage.getItem('readerScrollPosition') || 0;
+        let scrollPosition = 0;
         
         // 存储章节信息
         let chapters = [];
         
-        // TTS相关变量
-        let speechSynthesis = window.speechSynthesis;
-        let currentUtterance = null;
-        let isPlaying = false;
-        let currentParagraphIndex = 0;
-        let paragraphs = [];
-        let voices = [];
+        // TTS 相关变量
+        const TTS_STATE = { IDLE: 0, PLAYING: 1, PAUSED: 2 };
+        let ttsState = TTS_STATE.IDLE;          // 当前状态：空闲/播放/暂停
+        let ttsNeedsRespeak = false;             // true = 刷新后恢复暂停，需要重新 speak 而非 resume
+        let currentUtterance = null;             // 当前 SpeechSynthesisUtterance
+        let currentParagraphIndex = 0;           // 正在朗读的段落索引
+        let paragraphs = [];                     // 所有可朗读的段落元素
+        let voices = [];                         // 可用语音列表
+        const synth = window.speechSynthesis;    // 语音合成引擎
         
         // 初始化字体大小
         reader.style.fontSize = fontSize + 'px';
@@ -416,6 +561,8 @@
         function showTileMenu() {
             reader.style.display = 'none';
             tileMenu.style.display = 'flex';
+            menuButton.style.display = 'none';
+            ttsButton.style.display = 'none';
             tileMenu.innerHTML = ''; // 清空并重新生成
             
             tiles.forEach(tile => {
@@ -436,6 +583,10 @@
         function hideTileMenu() {
             reader.style.display = 'block';
             tileMenu.style.display = 'none';
+            menuButton.style.display = 'flex';
+            if (synth) {
+                ttsButton.style.display = 'flex';
+            }
         }
         
         // 加载小说内容
@@ -450,6 +601,12 @@
             
             // 有文件名参数，隐藏磁贴菜单，显示阅读器
             hideTileMenu();
+            
+            // 设置当前小说的唯一标识（用文件路径的 hash 作为键）
+            currentNovelKey = filePath;
+            
+            // 恢复该小说的滚动位置
+            scrollPosition = parseInt(localStorage.getItem(storageKey('scrollPosition'))) || 0;
             
             // 设置网页标题为解码后的文件名（提取最后一部分作为标题）
             try {
@@ -508,6 +665,23 @@
             } catch (error) {
                 reader.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
             }
+        }
+
+        // 隐藏加载遮罩（立即移除，无动画）
+        function hideLoadingImmediate() {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.style.display = 'none';
+        }
+
+        // 隐藏加载遮罩（淡出后移除）
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) return;
+            overlay.classList.add('fade-out');
+            overlay.addEventListener('transitionend', () => {
+                overlay.style.display = 'none';
+            }, { once: true });
         }
         
         // 格式化文本并识别章节
@@ -609,177 +783,282 @@
             ttsControls.classList.toggle('active');
         }
         
-        // 初始化TTS功能
+        // ========== TTS 模块（完整重写）==========
+
+        // 获取当前TTS参数
+        function getTTSParams() {
+            return {
+                rate: parseFloat(ttsRate.value),
+                pitch: parseFloat(ttsPitch.value),
+                volume: parseFloat(ttsVolume.value),
+                voiceName: ttsVoice.value
+            };
+        }
+
+        // 保存TTS参数到 sessionStorage（按小说分别存储）
+        function saveTTSParams() {
+            sessionStorage.setItem(storageKey('tts_rate'), ttsRate.value);
+            sessionStorage.setItem(storageKey('tts_pitch'), ttsPitch.value);
+            sessionStorage.setItem(storageKey('tts_volume'), ttsVolume.value);
+            sessionStorage.setItem(storageKey('tts_voice'), ttsVoice.value);
+        }
+
+        // 从 sessionStorage 恢复TTS参数（按小说分别恢复）
+        function restoreTTSParams() {
+            const savedRate = sessionStorage.getItem(storageKey('tts_rate'));
+            const savedPitch = sessionStorage.getItem(storageKey('tts_pitch'));
+            const savedVolume = sessionStorage.getItem(storageKey('tts_volume'));
+            const savedVoice = sessionStorage.getItem(storageKey('tts_voice'));
+            if (savedRate) ttsRate.value = savedRate;
+            if (savedPitch) ttsPitch.value = savedPitch;
+            if (savedVolume) ttsVolume.value = savedVolume;
+            // savedVoice 在 loadVoices 后设置
+            return savedVoice || null;
+        }
+
+        // 加载可用语音列表（传入要恢复的语音名）
+        function loadVoices(restoreVoiceName) {
+            voices = synth.getVoices();
+            ttsVoice.innerHTML = '<option value="">默认语音</option>';
+
+            // 优先中文语音，再其他
+            const chineseVoices = voices.filter(v => v.lang.includes('zh'));
+            const otherVoices = voices.filter(v => !v.lang.includes('zh'));
+            const allVoices = [...chineseVoices, ...otherVoices];
+
+            allVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = voice.name + ' (' + voice.lang + ')';
+                ttsVoice.appendChild(option);
+            });
+
+            // 恢复之前选择的语音
+            if (restoreVoiceName) {
+                ttsVoice.value = restoreVoiceName;
+                // 如果精确名匹配失败，尝试模糊匹配
+                if (ttsVoice.value !== restoreVoiceName) {
+                    const match = allVoices.find(v => v.name === restoreVoiceName);
+                    if (match) ttsVoice.value = match.name;
+                }
+            }
+        }
+
+        // 更新按钮视觉状态
+        function updateTTSButtons() {
+            ttsPlay.classList.toggle('active', ttsState === TTS_STATE.PLAYING);
+            ttsPause.classList.toggle('active', ttsState === TTS_STATE.PAUSED);
+        }
+
+        // TTS 事件是否已绑定
+        let ttsEventsBound = false;
+        // utterance 版本号（每次 cancel/re-speak 递增，用于废弃旧回调）
+        let ttsUtteranceVersion = 0;
+
+        // 初始化TTS
         function initTTS() {
-            // 检查浏览器是否支持
-            if (!speechSynthesis) {
+            if (!synth) {
                 ttsButton.style.display = 'none';
                 return;
             }
-            
-            // 加载可用语音
-            loadVoices();
-            
-            // 语音加载事件
-            speechSynthesis.onvoiceschanged = loadVoices;
-            
-            // TTS控制事件
-            ttsPlay.addEventListener('click', playTTS);
-            ttsPause.addEventListener('click', pauseTTS);
-            ttsStop.addEventListener('click', stopTTS);
-            
-            // TTS参数控制
-            ttsRate.addEventListener('input', updateTTSRate);
-            ttsPitch.addEventListener('input', updateTTSPitch);
-            ttsVolume.addEventListener('input', updateTTSVolume);
-            ttsVoice.addEventListener('change', updateTTSVoice);
-            
-            // 初始化显示值
-            updateTTSRate();
-            updateTTSPitch();
-            updateTTSVolume();
-        }
-        
-        // 加载可用语音
-        function loadVoices() {
-            voices = speechSynthesis.getVoices();
-            ttsVoice.innerHTML = '<option value="">默认语音</option>';
-            
-            // 优先显示中文语音
-            const chineseVoices = voices.filter(voice => voice.lang.includes('zh'));
-            const otherVoices = voices.filter(voice => !voice.lang.includes('zh'));
-            
-            chineseVoices.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                ttsVoice.appendChild(option);
-            });
-            
-            otherVoices.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                ttsVoice.appendChild(option);
-            });
-        }
-        
-        // 播放TTS
-        function playTTS() {
-            if (!paragraphs.length) return;
-            
-            if (isPlaying) {
-                speechSynthesis.resume();
-                return;
+
+            // 恢复参数
+            const savedVoice = restoreTTSParams();
+
+            // 绑定事件（确保只绑定一次）
+            if (!ttsEventsBound) {
+                ttsEventsBound = true;
+                ttsPlay.addEventListener('click', playTTS);
+                ttsPause.addEventListener('click', pauseTTS);
+                ttsStop.addEventListener('click', stopTTS);
+                ttsRate.addEventListener('input', onRateChange);
+                ttsPitch.addEventListener('input', onPitchChange);
+                ttsVolume.addEventListener('input', onVolumeChange);
+                ttsVoice.addEventListener('change', onVoiceChange);
             }
-            
-            // 从当前可见的段落开始
-            const scrollTop = window.scrollY;
-            for (let i = 0; i < paragraphs.length; i++) {
-                if (paragraphs[i].offsetTop >= scrollTop - 50) {
-                    currentParagraphIndex = i;
-                    break;
+
+            // 加载语音列表
+            loadVoices(savedVoice);
+
+            // 部分浏览器语音异步加载
+            synth.onvoiceschanged = function() {
+                const currentVoiceName = ttsVoice.value;
+                loadVoices(currentVoiceName || sessionStorage.getItem(storageKey('tts_voice')));
+            };
+
+            // 初始化显示值
+            onRateChange();
+            onPitchChange();
+            onVolumeChange();
+
+            // 尝试恢复暂停状态（刷新后队列已空，需要重新 speak）
+            const savedIndex = sessionStorage.getItem(storageKey('tts_paragraph_index'));
+            if (savedIndex !== null) {
+                currentParagraphIndex = parseInt(savedIndex, 10);
+                if (currentParagraphIndex >= 0 && currentParagraphIndex < paragraphs.length) {
+                    ttsState = TTS_STATE.PAUSED;
+                    ttsNeedsRespeak = true; // 标记需要重新朗读而非 resume
+                    updateTTSButtons();
                 }
             }
-            
-            speakCurrentParagraph();
         }
-        
-        // 朗读当前段落
-        function speakCurrentParagraph() {
+
+        // --- 播放 ---
+        function playTTS() {
+            if (!paragraphs.length) return;
+
+            if (ttsState === TTS_STATE.PAUSED) {
+                // 从暂停恢复：一律重新朗读当前段落（避免浏览器 resume 失效问题）
+                ttsState = TTS_STATE.IDLE;
+                ttsNeedsRespeak = false;
+                currentUtterance = null;
+                synth.cancel(); // 清空队列
+                speakParagraph();
+                return;
+            }
+
+            if (ttsState === TTS_STATE.PLAYING) {
+                // 已在播放，忽略
+                return;
+            }
+
+            // IDLE → 开始朗读
+            // 确定起始段落
+            const savedIndex = sessionStorage.getItem(storageKey('tts_paragraph_index'));
+            if (savedIndex !== null) {
+                currentParagraphIndex = parseInt(savedIndex, 10);
+                if (currentParagraphIndex >= paragraphs.length) currentParagraphIndex = 0;
+            } else {
+                // 无缓存：从当前可见段落开始
+                const scrollTop = window.scrollY;
+                currentParagraphIndex = 0;
+                for (let i = 0; i < paragraphs.length; i++) {
+                    if (paragraphs[i].offsetTop >= scrollTop - 50) {
+                        currentParagraphIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            speakParagraph();
+        }
+
+        // 朗读指定索引的段落
+        function speakParagraph() {
             if (currentParagraphIndex >= paragraphs.length) {
                 stopTTS();
                 return;
             }
-            
-            // 移除之前的高亮
+
+            ttsState = TTS_STATE.PLAYING;
+            updateTTSButtons();
+
+            // 移除旧高亮，添加新高亮
             paragraphs.forEach(p => p.classList.remove('tts-highlight'));
-            
-            // 高亮当前段落
-            const currentParagraph = paragraphs[currentParagraphIndex];
-            currentParagraph.classList.add('tts-highlight');
-            
-            // 滚动到当前段落
-            currentParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // 创建语音合成实例
-            currentUtterance = new SpeechSynthesisUtterance(currentParagraph.textContent);
-            
-            // 设置语音参数
-            currentUtterance.rate = parseFloat(ttsRate.value);
-            currentUtterance.pitch = parseFloat(ttsPitch.value);
-            currentUtterance.volume = parseFloat(ttsVolume.value);
-            
+            const para = paragraphs[currentParagraphIndex];
+            para.classList.add('tts-highlight');
+            para.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 创建朗读实例
+            const utterance = new SpeechSynthesisUtterance(para.textContent);
+            const params = getTTSParams();
+            utterance.rate = params.rate;
+            utterance.pitch = params.pitch;
+            utterance.volume = params.volume;
+
             // 设置语音
-            if (ttsVoice.value) {
-                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
-                if (selectedVoice) {
-                    currentUtterance.voice = selectedVoice;
-                }
+            if (params.voiceName && voices.length) {
+                const selectedVoice = voices.find(v => v.name === params.voiceName);
+                if (selectedVoice) utterance.voice = selectedVoice;
             }
-            
-            // 语音结束事件
-            currentUtterance.onend = function() {
+
+            // 用版本号确保只有最新的 utterance 的回调生效
+            ttsUtteranceVersion++;
+            const thisVersion = ttsUtteranceVersion;
+
+            // 段落结束 → 下一段
+            utterance.onend = function() {
+                if (thisVersion !== ttsUtteranceVersion) return; // 已被 cancel 替换
                 currentParagraphIndex++;
-                speakCurrentParagraph();
+                sessionStorage.setItem(storageKey('tts_paragraph_index'), currentParagraphIndex);
+                speakParagraph();
             };
-            
-            // 开始朗读
-            speechSynthesis.speak(currentUtterance);
-            isPlaying = true;
+
+            // 出错 → 停止（忽略 canceled）
+            utterance.onerror = function(e) {
+                if (thisVersion !== ttsUtteranceVersion) return; // 已被 cancel 替换
+                if (e.error === 'canceled' || e.error === 'interrupted') return;
+                ttsState = TTS_STATE.IDLE;
+                updateTTSButtons();
+                paragraphs.forEach(p => p.classList.remove('tts-highlight'));
+            };
+
+            currentUtterance = utterance;
+            synth.speak(utterance);
         }
-        
-        // 暂停TTS
+
+        // --- 暂停 ---
         function pauseTTS() {
-            if (speechSynthesis.speaking) {
-                speechSynthesis.pause();
-                isPlaying = false;
+            if (ttsState === TTS_STATE.PLAYING) {
+                synth.cancel(); // 清空队列，不用 pause（避免浏览器 pause/resume 失效）
+                ttsState = TTS_STATE.PAUSED;
+                ttsNeedsRespeak = true; // 标记恢复时需要重新朗读
+                updateTTSButtons();
+                // 缓存进度
+                sessionStorage.setItem(storageKey('tts_paragraph_index'), currentParagraphIndex);
+                saveTTSParams();
             }
         }
-        
-        // 停止TTS
+
+        // --- 停止 ---
         function stopTTS() {
-            speechSynthesis.cancel();
-            isPlaying = false;
+            ttsUtteranceVersion++; // 废弃所有旧回调
+            synth.cancel();
+            ttsState = TTS_STATE.IDLE;
+            ttsNeedsRespeak = false;
             currentParagraphIndex = 0;
-            
-            // 移除高亮
+            currentUtterance = null;
+            updateTTSButtons();
+            sessionStorage.removeItem(storageKey('tts_paragraph_index'));
             paragraphs.forEach(p => p.classList.remove('tts-highlight'));
         }
-        
-        // 更新语速
-        function updateTTSRate() {
-            ttsRateValue.textContent = ttsRate.value;
-            if (currentUtterance) {
+
+        // --- 参数变更回调 ---
+        function onRateChange() {
+            ttsRateValue.textContent = parseFloat(ttsRate.value).toFixed(1);
+            if (currentUtterance && ttsState === TTS_STATE.PLAYING) {
                 currentUtterance.rate = parseFloat(ttsRate.value);
             }
+            saveTTSParams();
         }
-        
-        // 更新音调
-        function updateTTSPitch() {
-            ttsPitchValue.textContent = ttsPitch.value;
-            if (currentUtterance) {
+
+        function onPitchChange() {
+            ttsPitchValue.textContent = parseFloat(ttsPitch.value).toFixed(1);
+            if (currentUtterance && ttsState === TTS_STATE.PLAYING) {
                 currentUtterance.pitch = parseFloat(ttsPitch.value);
             }
+            saveTTSParams();
         }
-        
-        // 更新音量
-        function updateTTSVolume() {
-            ttsVolumeValue.textContent = ttsVolume.value;
-            if (currentUtterance) {
+
+        function onVolumeChange() {
+            ttsVolumeValue.textContent = parseFloat(ttsVolume.value).toFixed(1);
+            if (currentUtterance && ttsState === TTS_STATE.PLAYING) {
                 currentUtterance.volume = parseFloat(ttsVolume.value);
             }
+            saveTTSParams();
         }
-        
-        // 更新语音
-        function updateTTSVoice() {
-            if (currentUtterance && ttsVoice.value) {
-                const selectedVoice = voices.find(voice => voice.name === ttsVoice.value);
-                if (selectedVoice) {
-                    currentUtterance.voice = selectedVoice;
-                }
+
+        function onVoiceChange() {
+            saveTTSParams();
+            if (ttsState === TTS_STATE.PLAYING) {
+                // 正在播放时切换语音：先重置状态，取消当前，用新语音重讲当前段
+                ttsState = TTS_STATE.IDLE;
+                currentUtterance = null;
+                synth.cancel();
+                speakParagraph();
             }
         }
+        // ========== TTS 模块结束 ==========
         
         // 双指缩放功能
         function handleTouchStart(e) {
@@ -817,10 +1096,12 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
         
-        // 保存阅读位置
+        // 保存阅读位置（按小说分别存储）
         function saveScrollPosition() {
             scrollPosition = window.scrollY;
-            localStorage.setItem('readerScrollPosition', scrollPosition);
+            if (currentNovelKey) {
+                localStorage.setItem(storageKey('scrollPosition'), scrollPosition);
+            }
             
             // 更新活动章节
             updateActiveChapter();
@@ -855,8 +1136,41 @@
             }
         });
         
-        // 页面加载完成后加载小说
-        window.addEventListener('DOMContentLoaded', loadNovel);
+        // 页面关闭时，若正在朗读或暂停则视为暂停（缓存进度和参数）
+        window.addEventListener('beforeunload', () => {
+            if (currentNovelKey && (ttsState === TTS_STATE.PLAYING || ttsState === TTS_STATE.PAUSED)) {
+                sessionStorage.setItem(storageKey('tts_paragraph_index'), currentParagraphIndex);
+                saveTTSParams();
+            }
+        });
+        
+        // 页面加载完成后
+        window.addEventListener('DOMContentLoaded', () => {
+            const filePath = getFileNameFromURL();
+            const isFirstVisit = !sessionStorage.getItem('visited');
+
+            if (!filePath) {
+                // 显示磁贴菜单
+                if (isFirstVisit) {
+                    sessionStorage.setItem('visited', '1');
+                    // 首次访问：播放遮罩动画至少2秒后淡出
+                    const start = Date.now();
+                    loadNovel().then(() => {
+                        const elapsed = Date.now() - start;
+                        const remaining = Math.max(0, 2000 - elapsed);
+                        setTimeout(hideLoading, remaining);
+                    });
+                } else {
+                    // 从小说页返回：不显示动画
+                    hideLoadingImmediate();
+                    loadNovel();
+                }
+            } else {
+                // 进入小说加载：立即移除遮罩，由 loadNovel 内部显示"加载中..."提示
+                hideLoadingImmediate();
+                loadNovel();
+            }
+        });
         
         // 防止页面缩放
         document.addEventListener('gesturestart', function(e) {
