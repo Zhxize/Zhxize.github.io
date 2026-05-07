@@ -1,0 +1,25 @@
+name: MCbot
+main: com.example.mcbot.MCbotPlugin
+version: 1.1.1
+api-version: 1.12
+description: 签到 / 抽奖 / 积分排行 / 个人信息 / 菜单 小功能合集
+
+commands:
+  mcbot:
+    description: 查看 MCbot 版本信息
+    usage: /mcbot
+  签到:
+    description: 每日签到，获得积分
+    usage: /签到
+  抽奖:
+    description: 每日抽奖，首次免费
+    usage: /抽奖
+  积分排行:
+    description: 查看全服积分排行
+    usage: /积分排行 [页码]
+  个人信息:
+    description: 查看自己的积分和签到信息
+    usage: /个人信息
+  菜单:
+    description: 打开功能菜单（可点击）
+    usage: /菜单

@@ -1,0 +1,10 @@
+name: ChatAPI
+main: com.example.chatapi.ChatAPIPlugin
+version: 1.0.0
+api-version: 1.12
+description: 玩家聊天转发至本地 HTTP API，同时支持接收控制台指令
+
+commands:
+  chatapi:
+    description: ChatAPI 管理指令
+    usage: /chatapi <reload|status>
