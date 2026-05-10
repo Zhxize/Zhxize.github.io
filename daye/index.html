@@ -45,20 +45,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: containerFadeIn 0.9s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
-            opacity: 0;
-            transform: translateY(8px);
-        }
-
-        @keyframes containerFadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0px);
-            }
         }
 
         /* 页眉区域 — 标题行 + 按钮靠右 */
@@ -98,18 +84,6 @@
             color: #e0cfaa;
             text-shadow: 2px 2px 0 #2a241a;
             margin-bottom: 0;
-            animation: titleBreathing 3s infinite alternate ease-in-out;
-        }
-
-        @keyframes titleBreathing {
-            0% {
-                letter-spacing: 4px;
-                text-shadow: 2px 2px 0 #2a241a;
-            }
-            100% {
-                letter-spacing: 5px;
-                text-shadow: 2px 2px 3px #1f1b13;
-            }
         }
 
         /* 按钮样式 — 与主页面风格统一 */
@@ -184,20 +158,6 @@
             max-height: 100%;
             scrollbar-width: thin;
             transition: all 0.3s ease;
-            animation: textGlow 0.8s ease-out 0.2s both;
-        }
-
-        @keyframes textGlow {
-            0% {
-                opacity: 0.85;
-                text-shadow: 0 0 0px rgba(230, 210, 150, 0);
-                border-left-color: #5e4f34;
-            }
-            100% {
-                opacity: 1;
-                text-shadow: 0 0 2px rgba(200, 180, 120, 0.15);
-                border-left-color: #8f7a53;
-            }
         }
 
         .hunter-records::-webkit-scrollbar {
@@ -372,18 +332,6 @@
             transition: all 0.25s ease;
             display: flex;
             flex-direction: column;
-            animation: cardFadeIn 0.4s ease-out;
-        }
-
-        @keyframes cardFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .media-card:hover {
@@ -497,6 +445,28 @@
             visibility: hidden;
             opacity: 0;
             transition: visibility 0s 0.2s, opacity 0.2s ease;
+        }
+
+        /* 音像库加载状态 */
+        .vault-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #b8aa87;
+        }
+        .vault-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #3c372c;
+            border-top-color: #8f7a53;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .inline-fullscreen-overlay.active {
@@ -704,6 +674,7 @@
 <script>
     let mediaCatalog = [];
     let currentFullscreenVideo = null;  // 记录当前全屏播放的视频元素
+    let mediaDataLoaded = false;       // 标记是否已加载过数据（避免重复加载）
     
     // 获取媒体类型
     function getMediaType(item) {
@@ -744,17 +715,14 @@
             window.currentFullscreenMedia = video;
             window.currentMediaType = 'video';
             currentFullscreenVideo = video;
-            // ★ 关键改动：视频加载完成后自动播放，并处理可能的自动播放策略
             video.addEventListener('canplay', () => {
                 video.play().catch(err => {
                     console.warn('自动播放失败，可能是浏览器策略限制，但已保留控制条可手动播放', err);
                 });
             });
-            // 如果已经加载足够数据，立即尝试播放
             if (video.readyState >= 2) {
                 video.play().catch(e => console.warn(e));
             }
-            // 额外保证loadedmetadata后尝试一次
             video.addEventListener('loadedmetadata', () => {
                 video.play().catch(() => {});
             });
@@ -790,7 +758,6 @@
     function closeInlineFullscreen() {
         const overlay = document.getElementById('inlineFullscreen');
         if (!overlay) return;
-        // 如果是视频，暂停播放并释放资源
         if (window.currentFullscreenMedia && window.currentMediaType === 'video') {
             window.currentFullscreenMedia.pause();
         }
@@ -800,27 +767,32 @@
         currentFullscreenVideo = null;
     }
 
+    // 显示加载状态
+    function showLoadingState() {
+        const grid = document.getElementById('mediaGrid');
+        if (!grid) return;
+        grid.innerHTML = '<div class="vault-loading"><div class="spinner"></div><span>正在加载资料库...</span></div>';
+    }
+
     // 构建音像库卡片
     function buildMediaCards() {
         const grid = document.getElementById('mediaGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        mediaCatalog.forEach((item, idx) => {
+        mediaCatalog.forEach((item) => {
             const type = getMediaType(item);
             const card = document.createElement('div');
             card.className = 'media-card';
-            card.style.animationDelay = `${idx * 0.03}s`;
             const mediaContainer = document.createElement('div');
             mediaContainer.className = 'media-container';
             let mediaEl;
             if (type === 'video') {
                 const vid = document.createElement('video');
                 vid.src = item.url;
-                vid.preload = 'metadata';
+                vid.preload = 'none';  // 卡片中不预加载视频
                 vid.controls = true;
                 vid.controlsList = 'nodownload';
                 if (item.poster) vid.poster = item.poster;
-                // 卡片中的视频保持不自动播放，仅全屏时自动播放
                 vid.addEventListener('click', (e) => {
                     e.stopPropagation();
                     openInlineFullscreen(vid, 'video', item.url, item.poster);
@@ -828,8 +800,10 @@
                 mediaEl = vid;
             } else {
                 const img = document.createElement('img');
-                img.src = item.url;
+                // 优先加载缩略图，原图在全屏时加载
+                img.src = item.thumbnail || item.url;
                 img.alt = item.name;
+                // 非视口内不加载
                 img.loading = 'lazy';
                 img.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -838,7 +812,6 @@
                 mediaEl = img;
             }
             mediaContainer.appendChild(mediaEl);
-            // 整个mediaContainer点击同样触发全屏自动播放（视频全屏自动播放）
             mediaContainer.addEventListener('click', () => {
                 if (type === 'video') {
                     openInlineFullscreen(mediaEl, 'video', item.url, item.poster);
@@ -879,17 +852,25 @@
         });
     }
 
-    // 加载外部媒体数据（模拟 / 动态加载 media-data.js）
+    // 加载外部媒体数据（按需加载，不在初始化时调用）
     function loadMediaData() {
+        if (mediaDataLoaded) {
+            // 已有数据，直接构建卡片
+            buildMediaCards();
+            return;
+        }
+        
+        showLoadingState();
+        
         const script = document.createElement('script');
         script.src = 'media-data.js';
         script.onload = function() {
+            mediaDataLoaded = true;
             if (window.MEDIA_CATALOG) {
                 mediaCatalog = window.MEDIA_CATALOG;
                 buildMediaCards();
                 window.mediaCardsBuilt = true;
             } else {
-                // 如果没有外部数据，为了演示提供一个默认样例（可选，也可不展示）
                 console.log('使用内置样例数据');
                 mediaCatalog = [
                     { name: "示例猎奇影像", desc: "大爷亲述片段（示意）", url: "https://www.w3schools.com/html/mov_bbb.mp4", type: "video", poster: "" },
@@ -899,6 +880,7 @@
             }
         };
         script.onerror = function() {
+            mediaDataLoaded = true;
             console.warn('未找到 media-data.js，加载内置模拟数据');
             mediaCatalog = [
                 { name: "传奇时刻", desc: "大爷拆讲桌实录（示意）", url: "https://www.w3schools.com/html/mov_bbb.mp4", type: "video", poster: "" },
@@ -909,29 +891,22 @@
         document.head.appendChild(script);
     }
 
-    // 入口初始化
+    // 入口初始化（轻量化，不主动加载音像库数据）
     (function() {
         const vault = document.getElementById('mediaVault');
         const openBtn = document.getElementById('openVaultBtn');
         const closeBtn = document.getElementById('closeVaultBtn');
         const fsClose = document.getElementById('fullscreenCloseBtn');
-        let built = false;
         
         function pauseAllVaultVideos() {
             document.querySelectorAll('#mediaGrid video').forEach(v => { if (!v.paused) v.pause(); });
         }
         
         function openVault() {
-            if (!built) { 
-                if (!window.mediaCardsBuilt && mediaCatalog.length === 0) {
-                    loadMediaData();
-                } else if (mediaCatalog.length > 0 && !window.mediaCardsBuilt) {
-                    buildMediaCards();
-                    window.mediaCardsBuilt = true;
-                }
-                built = true;
-            } else if (mediaCatalog.length > 0 && document.getElementById('mediaGrid').children.length === 0) {
-                buildMediaCards();
+            // 点击时才加载数据（延迟加载）
+            if (!window.mediaCardsBuilt) {
+                loadMediaData();
+                window.mediaCardsBuilt = true;
             }
             vault.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -958,8 +933,8 @@
         const fullscreenOverlay = document.getElementById('inlineFullscreen');
         fullscreenOverlay.addEventListener('click', (e) => { if (e.target === fullscreenOverlay) closeInlineFullscreen(); });
         
-        // 预先加载媒体数据，确保卡片准备就绪
-        loadMediaData();
+        // ★ 移除：不再在初始化时预加载音像库数据
+        // loadMediaData(); // 已移除，改为按需加载
     })();
 </script>
 </body>
